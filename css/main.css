@@ -185,7 +185,7 @@ th {
 }
 body {
   position: relative;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Microsoft YaHei", Verdana, sans-serif;
   font-size: 14px;
   line-height: 2;
   color: #555;
@@ -908,9 +908,9 @@ pre .javascript .function {
   display: inline-block;
   vertical-align: top;
   line-height: 36px;
-  font-size: 20px;
+  font-size: 40px;
   font-weight: normal;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: "Brush Script MT", "PingFang SC", "Microsoft YaHei";
 }
 .site-subtitle {
   margin-top: 10px;
@@ -1549,7 +1549,7 @@ pre .javascript .function {
   width: 4px;
   height: 4px;
   border-radius: 50%;
-  background: #7fa690;
+  background: #ffc8aa;
 }
 .links-of-blogroll {
   font-size: 13px;

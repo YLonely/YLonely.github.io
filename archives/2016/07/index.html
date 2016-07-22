@@ -87,7 +87,7 @@
 <meta name="description">
 <meta property="og:type" content="website">
 <meta property="og:title" content="New thinking">
-<meta property="og:url" content="http://yoursite.com/index.html">
+<meta property="og:url" content="http://yoursite.com/archives/2016/07/index.html">
 <meta property="og:site_name" content="New thinking">
 <meta property="og:description">
 <meta name="twitter:card" content="summary">
@@ -110,7 +110,7 @@
   };
 </script>
 
-  <title> New thinking </title>
+  <title> 归档 | New thinking </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -131,9 +131,7 @@
     
   
 
-  <div class="container one-collumn sidebar-position-left 
-   page-home 
- ">
+  <div class="container one-collumn sidebar-position-left  page-archive  ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -210,216 +208,67 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-  <section id="posts" class="posts-expand">
+
+  <section id="posts" class="posts-collapse">
+    <span class="archive-move-on"></span>
+
+    <span class="archive-page-counter">
+      
+      
+      
+        
+      
+      嗯..! 目前共计 2 篇日志。 继续努力。
+    </span>
+
     
+
+      
+      
       
 
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
+      
         
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/" itemprop="url">
-                  正则引擎入门——正则文法匹配可以简单快捷(一)
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-07-22T15:08:39+08:00" content="2016-07-22">
-              2016-07-22
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
+        <div class="collection-title">
+          <h2 class="archive-year motion-element" id="archive-year-2016">2016</h2>
         </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
       
       
 
       
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+    <header class="post-header">
+
+      <h1 class="post-title">
         
-          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/">https://swtch.com/~rsc/regexp/</a></p>
-<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>　　下图是两种不同的正则引擎的匹配时间图。一个是被广泛应用于许多语言的标准解释器中，其中包括Perl。而另外一个则只被用到了少数的几个地方，比较出名的是awk和grep。这两种匹配方式有着相当不同的性能表现。<br><img src="https://swtch.com/~rsc/regexp/grep3p.png" alt="Perl match"><img src="https://swtch.com/~rsc/regexp/grep4p.png" alt="NFA match"><br>　　我们使用上标来表示字符串的重复，那么a?<sup>3</sup>a<sup>3</sup>便是a?a?a?aaa的缩写，而上边的两张图则表示了当我们使用a?<sup>n</sup>a<sup>n</sup>去匹配字符串a<sup>n</sup>时，两种不同的正则引擎所需的匹配时间。
-          <div class="post-more-link text-center">
-            <a class="btn" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/#more" rel="contents">
-              阅读全文 &raquo;
+            <a class="post-title-link" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/" itemprop="url">
+              
+                <span itemprop="name">正则引擎入门——正则文法匹配可以简单快捷(一)</span>
+              
             </a>
-          </div>
         
-      
-    </div>
+      </h1>
 
-    <div>
-      
-    </div>
+      <div class="post-meta">
+        <time class="post-time" itemprop="dateCreated"
+              datetime="2016-07-22T15:08:39+08:00"
+              content="2016-07-22" >
+          07-22
+        </time>
+      </div>
 
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
+    </header>
   </article>
 
 
-    
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
 
     
-      <header class="post-header">
 
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/05/10/我的第一篇博文/" itemprop="url">
-                  我的第一篇博文
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-10T20:48:30+08:00" content="2016-05-10">
-              2016-05-10
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/05/10/我的第一篇博文/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/我的第一篇博文/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>欢迎来到我的博客，我将在此记录下我在计算机领域的探索与进步，我会及时地将我的项目以及相应的介绍放到博客上，欢迎你们关注。同时你们也可以点击<a href="https://github.com/YLonely" target="_blank" rel="external">YLonely-GitHub</a>进入我的<code>GitHub</code>页面查看我的项目的最新进展。总之，欢迎任何人在此留下足迹。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
+
 
 
           </div>
@@ -593,6 +442,12 @@
 
 
   
+  
+    <script type="text/javascript" id="motion.page.archive">
+      $('.archive-year').velocity('transition.slideLeftIn');
+    </script>
+  
+
 
   
 

@@ -49,13 +49,19 @@
   
 
   
+    
+      
+    
+
+    
+  
 
   
 
   
     
     
-    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
   
 
 
@@ -109,6 +115,11 @@
     }
   };
 </script>
+
+
+
+
+  <link rel="canonical" href="http://yoursite.com/"/>
 
   <title> New thinking </title>
 </head>
@@ -211,6 +222,110 @@
           <div id="content" class="content">
             
   <section id="posts" class="posts-expand">
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
+                <a class="post-title-link" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(二)/" itemprop="url">
+                  正则引擎入门——正则文法匹配可以简单快捷(二)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-22T17:19:57+08:00" content="2016-07-22">
+              2016-07-22
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(二)/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(二)/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/">https://swtch.com/~rsc/regexp/</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="正则表达式"><a href="#正则表达式" class="headerlink" title="正则表达式"></a>正则表达式</h2><p>　　正则表达式是一个用来表示一系列字符的字符串的符号，当一个确定的字符串处于一个正则表达式所描述的字符串系列时，我们通常说这一正则表达式<em>匹配</em>了这一字符串。<br>　　最简单的正则表达式是一个字面上的字符，除了一些特殊的元字符：*+？（）| 以外，字符匹配的是它们自身。而为了匹配特殊的元字符，我们在这些元字符之前加上一个斜线 \ ，例如\+ 则可以匹配加号。<br>　　两个正则表达式相并联或串联可以形成新的正则表达式：如果e<sub>1</sub>可以匹配s,而e<sub>2</sub>匹配t,那么e<sub>1</sub>|e<sub>2</sub>匹配s或者t，e<sub>1</sub>e<sub>2</sub>匹配st。<br>　　元字符*，+，？代表重复操作符，e<sub>1</sub>*匹配一系列零个或多个元素的字符串，其中的每一个元素均匹配e<sub>1</sub>；e<sub>1</sub>+匹配一个或多个；e<sub>1</sub>？匹配零个或一个。<br>　　操作符的优先级，由弱到强排列，首先是并联 |，之后是串联，最后是重复操作符。括号可以用来改变结合的顺序，就像书写算术表达式一样。例如：ab|cd与（ab）|（cd）含义相同，ab*与a（b*）含义相同。
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(二)/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
     
       
 
@@ -388,7 +503,7 @@
       
         
           
-            <p>欢迎来到我的博客，我将在此记录下我在计算机领域的探索与进步，我会及时地将我的项目以及相应的介绍放到博客上，欢迎你们关注。同时你们也可以点击<a href="https://github.com/YLonely" target="_blank" rel="external">YLonely-GitHub</a>进入我的<code>GitHub</code>页面查看我的项目的最新进展。总之，欢迎任何人在此留下足迹。</p>
+            <p>　　欢迎来到我的博客，我将在此记录下我在计算机领域的探索与进步，我会及时地将我的项目以及相应的介绍放到博客上，欢迎你们关注。同时你们也可以点击<a href="https://github.com/YLonely" target="_blank" rel="external">YLonely-GitHub</a>进入我的<code>GitHub</code>页面查看我的项目的最新进展。总之，欢迎任何人在此留下足迹。</p>
 
           
         
@@ -458,7 +573,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">2</span>
+              <span class="site-state-item-count">3</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -513,7 +628,7 @@
 </div>
 
 <div class="powered-by">
-  Powered by <a class="theme-link" href="http://hexo.io">Hexo</a>
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
 </div>
 
 <div class="theme-info">
@@ -622,14 +737,18 @@
 
   
     
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
   
 
 
 
 
 
+
   
   
+
   
 
   

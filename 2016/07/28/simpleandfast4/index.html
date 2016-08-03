@@ -1,0 +1,630 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic|courier new:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="正则表达式,正则引擎," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching Can Be Simple And Fast的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文性能表现　　前文中我们所提">
+<meta property="og:type" content="article">
+<meta property="og:title" content="正则引擎入门——正则文法匹配可以简单快捷(四)">
+<meta property="og:url" content="http://ylonelyhub.com/2016/07/28/simpleandfast4/index.html">
+<meta property="og:site_name" content="New thinking">
+<meta property="og:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching Can Be Simple And Fast的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文性能表现　　前文中我们所提">
+<meta property="og:image" content="https://swtch.com/~rsc/regexp/grep1p.png">
+<meta property="og:image" content="https://swtch.com/~rsc/regexp/fig20.png">
+<meta property="og:image" content="https://swtch.com/~rsc/regexp/fig21.png">
+<meta property="og:updated_time" content="2016-08-03T04:14:28.982Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="正则引擎入门——正则文法匹配可以简单快捷(四)">
+<meta name="twitter:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching Can Be Simple And Fast的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文性能表现　　前文中我们所提">
+<meta name="twitter:image" content="https://swtch.com/~rsc/regexp/grep1p.png">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://ylonelyhub.com/2016/07/28/simpleandfast4/"/>
+
+  <title> 正则引擎入门——正则文法匹配可以简单快捷(四) | New thinking </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">New thinking</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Every little step</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                正则引擎入门——正则文法匹配可以简单快捷(四)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-07-28T09:29:29+08:00" content="2016-07-28">
+              2016-07-28
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/07/28/simpleandfast4/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/07/28/simpleandfast4/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html" target="_blank" rel="external">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/" target="_blank" rel="external">https://swtch.com/~rsc/regexp/</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="性能表现"><a href="#性能表现" class="headerlink" title="性能表现"></a>性能表现</h2><p>　　前文中我们所提到的C语言的实现并未按照效率优先的方式编写，但即便如此，当我们的输入足够巨大的时候，一个线性时间复杂度的实现算法要远快与拥有指数时间复杂度的实现方法。我们用被称为病态的正则表达式去测试如今几个比较流行的正则引擎后得到的结果证明了上边的观点。<br>　　考虑一下a?<sup>n</sup>a<sup>n</sup>这一正则表达式。它可以匹配a<sup>n</sup>。当a?选择不去匹配任何的字符的时候，整个字符串都会被后边的a<sup>n</sup>所匹配。拥有回溯功能的正则引擎会在遇到零个或一个的符号 ? 时优先去匹配一个，之后才是零个。对于a?<sup>n</sup>a<sup>n</sup>来说，便有n个选择，一共就会产生2<sup>n</sup>种可能性。而只有最后一种可能性——为所有的 ? 均选择为不匹配才可以最终匹配成功。因此采用回溯的正则引擎会需要<em>O</em>(2<sup>n</sup>)的时间，所以当n大于25的时候，匹配所需的时间就相当可观了。<br>　　相反的，Thompson的算法在匹配长度为n的字符串，并在同时维护一个长度为n的状态列表所需要的匹配时间为<em>O</em>(n<sup>2</sup>)（整个的时间复杂度是超线性的，因为在输入增加的情况下，正则表达式不一定是恒定的，因此当我们使用长度为m的正则表达式去匹配长度为n的文本的时候，Thompson算法的时间复杂度为<em>O</em>(mn)）<br>　　下图展示了在不同的正则引擎下使用a?<sup>n</sup>a<sup>n</sup>去匹配a<sup>n</sup>所需的时间：<br><img src="https://swtch.com/~rsc/regexp/grep1p.png" alt="time graph"><a id="more"></a><br>　　注意到该图的y轴经过了对数化的处理，目的是为了让曲线的走势更加的清晰。<br>　　通过上图我们可以知道Perl，PCRE，Python和Ruby均采用了递归的回溯。PCRE在n=23时就无法得出正确的匹配结果，因为它在超出某个最大的数值之后就会放弃回溯的匹配方式。而对于Perl 5.6来说，它的正则引擎据说采用了记忆表的技术，在消耗一些内存的情况下，能有效避免出现指数级的时间复杂度除非匹配时使用了回溯引用的功能。而在上图中看来，这项技术还不够成熟，即便正则表达式中没有回溯引用，它的匹配时间依然是指数级增长的。虽然在图中没有测试数据，但是Java也采用了回溯的实现方式。实际上java.util.regex接口要求使用回溯的实现方式。PHP采用的是PCRE的库。<br>　　蓝色的线条是Thompson算法的C语言实现。Awk，Tcl，GNU grep和GNU awk均采用构造DFA的方式，要么是提前构造DFA，要么是采用下一节会介绍的边构造边使用（on-the-fly）的方式。<br>　　有些同学可能会反对说这种测试对采用回溯的正则引擎不公平，因为我们太过于关注这些罕见的情况。这种反对其实漏掉了一点：当我们在面对两种正则引擎，一种在任何输入下都能快速高效的运行，另一种在大多数情况下能快速运行但在某些情况下会花费大量时间的时候，哪种是我们的首选其实是相当明了的。同时，排开我们这种罕见的情况不说，稍微复杂的情况依然是会出现的，例如我们使用(.*) (.*) (.*) (.*) (.*) （注意括号之间有空格）去拆分出5个由空格区分开的部分，或者当我们在使用 或 时排在前边的不是出现概率最大的情况。而最终的结果就是，码农们需要自己去学习，去记忆哪些是不好的正则表达式从而避开他们，或者他们需要从程序优化的角度去编写程序。而对于Thompson的方法来说，永远不需要注意这些东西，因为并没有所谓的不好的正则表达式。</p>
+<h2 id="储存NFA建立DFA"><a href="#储存NFA建立DFA" class="headerlink" title="储存NFA建立DFA"></a>储存NFA建立DFA</h2><p>　　回忆一下，我们之前说过DFA在运行的时候要比NFA更加高效，因为DFA在同一时间只会处于一个状态，他们永远不会面临多个下一状态的选择。任何一个NFA均可以转换为一个等价的DFA，该DFA中的一个状态对应于NFA的多个状态的集合。<br>　　例如，下图是我们之前使用过的abab|abbb的NFA图，在之上加入了状态的序号：<br><img src="https://swtch.com/~rsc/regexp/fig20.png" alt="NFA graph"><br>　　等价的DFA如下：<br><img src="https://swtch.com/~rsc/regexp/fig21.png" alt="DFA graph"><br>　　DFA中的一个状态对应于NFA的多个状态的集合。<br>　　在一定程度上，Thompson NFA的运行实质上也是对一个等价的DFA的模拟：每一个<em>List</em>都对应着一个DFA的状态，而给出当前的列表（list）以及下一个字符之后，函数<em>step</em>会计算出下一个要进入的DFA状态。Thompson的算法通过在需要时重建每一个DFA的状态来模拟DFA。我们可以将每一步计算出来的<em>Lists</em>保存在空余的内存中而不是在使用之后就丢弃，这样可以避免重复的计算，同时我们计算那些需要进行计算的DFA的状态。文章的这一节展示了这一方法的实现。在前文建立NFA的基础上，我们需要增加不到100行C代码去完成这一实现。<br>　　为了达到存储的目的，我们首先介绍一个新的代表DFA的状态的数据结构：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> DState</span><br><span class="line">&#123;</span><br><span class="line">	List l;</span><br><span class="line">	DState *next[<span class="number">256</span>];</span><br><span class="line">	DState *left;</span><br><span class="line">	DState *right;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure></p>
+<p>　　一个<em>DState</em>是对列表（list）<em>l</em>的复制。数组<em>next</em>为每一个可能的输入保存下一个状态，如果现在的状态是<em>d</em>而下一个输入字符是<em>c</em>，那下一个状态便是<em>d-&gt;next[c]</em>。如果<em>d-&gt;next[c]</em>是NULL，那么下一个状态还未被计算。函数<em>Nextstate</em>根据给出的状态和字符计算，保存，返回下一个状态。<br>　　整个匹配过程便是不断地沿着<em>d-&gt;next[c]</em>向前，在需要时调用函数<em>d-&gt;next[c]</em>计算新的状态。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">match</span><span class="params">(DState *start, <span class="keyword">char</span> *s)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> c;</span><br><span class="line">	DState *d, *next;</span><br><span class="line">	</span><br><span class="line">	d = start;</span><br><span class="line">	<span class="keyword">for</span>(; *s; s++)</span><br><span class="line">	&#123;</span><br><span class="line">		c = *s &amp; <span class="number">0xFF</span>;</span><br><span class="line">		<span class="keyword">if</span>((next = d-&gt;next[c]) == <span class="literal">NULL</span>)</span><br><span class="line">			next = nextstate(d, c);</span><br><span class="line">		d = next;</span><br><span class="line">	&#125;</span><br><span class="line">	return ismatch(&amp;d-&gt;l);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　所有被计算出来的<em>DState</em>都需要被存储到一个结构中，方便我们通过<em>List</em>来查看一个<em>DState</em>。为了达到目的，我们维护一个二叉树来保存状态，以排好序的<em>List</em>来作为键值（Key）。函数<em>dstate</em>根据所给的<em>List</em>给出保存的<em>DState</em>，在必要时开辟内存进行初始化：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DState* <span class="title">dstate</span><span class="params">(List *l)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> i;</span><br><span class="line">	DState **dp, *d;</span><br><span class="line">	<span class="keyword">static</span> DState *alldstates;</span><br><span class="line"></span><br><span class="line">	qsort(l-&gt;s, l-&gt;n, <span class="keyword">sizeof</span> l-&gt;s[<span class="number">0</span>], ptrcmp);</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*在二叉树中查找DState */</span></span><br><span class="line">	dp = &amp;alldstates;</span><br><span class="line">	<span class="keyword">while</span>((d = *dp) != <span class="literal">NULL</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		i = listcmp(l, &amp;d-&gt;l);</span><br><span class="line">		<span class="keyword">if</span>(i &lt; <span class="number">0</span>)</span><br><span class="line">			dp = &amp;d-&gt;left;</span><br><span class="line">		<span class="keyword">else</span> <span class="keyword">if</span>(i &gt; <span class="number">0</span>)</span><br><span class="line">			dp = &amp;d-&gt;right;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			return d;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">	<span class="comment">/* 开辟内存，初始化DState */</span></span><br><span class="line">	d = <span class="built_in">malloc</span>(sizeof *d + l-&gt;n*sizeof l-&gt;s[<span class="number">0</span>]);</span><br><span class="line">	<span class="built_in">memset</span>(d, <span class="number">0</span>, <span class="keyword">sizeof</span> *d);</span><br><span class="line">	d-&gt;l.s = (State**)(d+<span class="number">1</span>);</span><br><span class="line">	memmove(d-&gt;l.s, l-&gt;s, l-&gt;n*<span class="keyword">sizeof</span> l-&gt;s[<span class="number">0</span>]);</span><br><span class="line">	d-&gt;l.n = l-&gt;n;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/* 插入树中 */</span></span><br><span class="line">	*dp = d;</span><br><span class="line">	return d;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　函数<em>nextstate</em>调用<em>step</em>函数并返回所对应的DState：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DState* <span class="title">nextstate</span><span class="params">(DState *d, <span class="keyword">int</span> c)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	step(&amp;d-&gt;l, c, &amp;l1);</span><br><span class="line">	return d-&gt;next[c] = dstate(&amp;l1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　最后，DFA的初始状态是与NFA的初始列表相对应的DState：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">DState* <span class="title">startdstate</span><span class="params">(State *start)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	return dstate(startlist(start, &amp;l1));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　<em>DState</em>与DFA的状态所对应，但是我们只在需要的时候建立DFA的一个状态，如果一个DFA的状态没有在搜索中遇到，那它还根本不存在与内存中。另一种实现方式是在匹配之前将整个DFA构建出来，这样做会使得函数<em>match</em>运行得更快，但是会增加引擎初始化的时间以及内存消耗。<br>　　有人可能会担心这种边构造边使用的DFA不断上升的内存消耗。因为<em>DState</em>只是为函数<em>step</em>保存数据，在<em>dstate</em>的实现中，我们可以在存储的数据过大时选择清空所有已经构建好的DFA。这样一种处理方式只需要在<em>dstate</em>与<em>nextstate</em>中添加大约50行代码。（Awk使用了相似的内存限制策略，最多不能存储超过32个状态。这也就解释了为什么上图中当n=28时，awk的图线不连续）<br>　　从正则表达式导出的NFA通常表现出良好的局部性，在匹配大多数的文本的时候，它们常常访问同一个状态，也常顺着相同的几条路径向前推进。这也就使得数据的存储显得非常值得，当第一次顺着一个箭头来到新状态时，这个状态必须被计算出来，而以后的同样的路径也只是对同一个内存地址的访问。真正的基于DFA的实现方式可以对匹配进行优化使效率更高。</p>
+<h2 id="真正的正则表达式"><a href="#真正的正则表达式" class="headerlink" title="真正的正则表达式"></a>真正的正则表达式</h2><p>　　在真正的程序中使用的正则表达式要比我们实现的正则引擎能处理的表达式复杂得多。这一节我们简要地介绍一下其中的复杂之处。对以下任何一部分的完整的介绍都超出了本文的范畴。<br>　　<strong>字符类</strong>(Character classes)  一个字符类，无论是[0-9]还是\w或者是 . （句点），均只是“或”的另一种更加简明的表示形式。字符类可以在编译过程中被还原成“或”的形式，而更有效率的通常是增加一个新的类型的NFA结点去直接表示字符类。POSIX（Portable Operating System Interface）标准还定义了一些像[[: upper :]]这样的会根据当前语境改变自身含义的特殊字符类，而为了实现这些功能最困难的地方不在于怎样将它们融入到NFA中，而是如何准确的确定它们的含义。<br>　　<strong>转义字符</strong>(Escape sequences)  真正的正则表达式文法需要能够处理转义字符，既要能够匹配元字符又要能够匹配不可见字符如换行符 \n。<br>　　<strong>重复匹配</strong>(Counted repetition)  许多正则引擎提供了重复匹配的操作符 <em>{n}</em> 去控制正则表达式中某元素的重复匹配次数，<em>{n,m}</em>表示最少重复匹配n次，最多不超过m次。而<em>{n, }</em>表示至少n次。使用递归回溯方式实现的正则引擎可以采用循环去实现这一功能，而基于NFA或DFA的正则引擎则需要将重复匹配扩展一下，例如将<em>e{3}</em>扩展为<em>eee</em>，将<em>e{3,5}</em>扩展为<em>eeee?e?</em>，将<em>e{3, }</em>扩展为eee+。<br>　　<strong>分组抽取</strong>(Submatch extraction)  当一个正则表达式被用来切分或者解析一个字符串时，如果我们能够知道究竟是字符串的哪一段被正则表达式的某一部分匹配了那将是非常有用的。当一个字符串被正则表达式([0-9]+-[0-9]+-[0-9]+) ([0-9]+:[0-9]+)匹配之后（该正则表达式前一部分匹配日期，后一部分匹配时间），许多正则引擎都可以让我们获得由不同的子表达式所匹配得到的字符串，例如，我们可以在Perl中这样写：<br><figure class="highlight perl"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="regexp">/([0-9]+-[0-9]+-[0-9]+) ([0-9]+:[0-9]+)/</span>)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">print</span> <span class="string">"date: $1, time: $2\n"</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　分组抽取已经被计算机科学的理论学家忽略了，而使用回溯实现这个功能也成了争议的焦点。然而，采用Thompson式的算法可以在不牺牲性能的前提下实现这个功能。早在1985年，第八版的Unix regexp库函数就实现了这种算法，虽然在之后这种算法被仔细地解释了，但是也没有被广泛使用，甚至没人注意它。<br>　　<strong>非固定的匹配</strong>(Unanchored matches)  我们的这篇文章一直都假设正则表达式会去匹配所有的输入字符，而实际上，我们常常希望找到输入的字符串的某一部分是被正则表达式所匹配的。Unix的工具一般只会返回从字符串的左边开始，被正则表达式匹配的最长的部分。对于<em>e</em>的unanchored search其实是分组抽取的特殊情况，例如正则表达式.*(e).*中的 .* 被设定为匹配尽量短的字符串。<br>　　<strong>懒惰操作符</strong>(Non-greedy operators)  在传统的Unix正则表达式中，重复操作符 ?,*,和+被定义为尽可能匹配最多的字符串，同时还允许整个正则表达式参与字符串的匹配。例如使用(.+)(.+)去匹配abcd时，第一个(.+)匹配到的是abc，第二个匹配到的是d。这些操作符被称作“贪婪的”。Perl引进了??，*?，+?作为?，*，+的非贪婪（懒惰）版本，它们会尽可能少的去匹配字符串从而避免了过度匹配。当使用例如使用(.+?)(.+?)去匹配abcd时，第一个(.+?)只会匹配a，第二个会匹配bcd。根据定义，一个操作符是否是贪婪的并不会影响一个正则表达式是否作为一个整体去匹配字符串，它只会影响到匹配时的分组情况。回溯的算法为懒惰操作符提供了一个简单的实现方式：在采用较长的匹配之前使用较短的匹配。例如，对于e?来说，首先采用e，之后再不使用；而e??则相反。<br>　　<strong>断言</strong>(Assertions)  传统的正则表达式的元字符 ^ 和 $ 可以被视为对文本周围情况的断言。^ 断定在这之前的那个字符是一个换行符（或者是字符串的开始），而 $ 断定在这之后的字符是换行符（或者字符串的结尾）。Perl引入了更多的断言，例如单词边界 \b ，它断定在这之前的字符是文字或数字，而之后的字符则不是，或者相反的情况。Perl将这个观点推广提出了<strong>向前断言</strong>，例如(?=re)断言文本当前输入位置的之后两个字符与<em>re</em>匹配，但却并没有将文本的输入向前推进。(?!re)与此类似，但是是断言文本与<em>re</em>不匹配。向后断言 (?&lt;=re)和(?&lt;!re)与此类似但是是对当前文本输入位置之前的断言。简单的断言，例如^ ，$ , \b，比较简单在NFA中实现，将匹配延迟一个字节可以实现向前断言。推广后的断言比较难以实现，但是原则上是可以被融入NFA中的。<br>　　<strong>回溯引用</strong>(Backreferences)  作为之前多次提到过的技术，没有人知道怎样去高效地实现回溯引用，但是也没有人能证明不存在更好的办法。（更具体地说，该问题是NP完全的，意味着一旦有人找到了更加高效的方法，那将会成为计算机科学的大新闻，这个发明人也会得到百万的奖金。）对于回溯，最简单高效的的策略，也是被最初的awk和egrep所采用的，便是不去实现回溯引用。但是这种策略已经不再适用了，因为越来越多的人开始时不时的依靠于回溯引用所带来的能力，与此同时回溯引用也是POSIX对正则表达式制定的标准的一部分。即便如此，我们也有理由在匹配大多数字符串的时候适用Thompson算法，而在需要的时候才使用回溯的算法。一个聪明的实现方式是将两种算法结合起来，使用回溯算法只是为了实现回溯引用。<br>　　<strong>带记忆表的回溯</strong>(Backtracking with memoization)  Perl采用记忆表来避免回溯过程中指数级的时间复杂度。至少在理论上，它应该使得Perl的正则引擎表现得更像NFA算法而不是回溯算法。但记忆表并没有完全解决问题，记忆表本身要求的内存空间要严格等于匹配文本的大小乘上正则表达式的长度。记忆表也并没有解决回溯过程中栈使用空间的问题，该空间与匹配的文本的大小呈线性相关，匹配过长的文本的时候可能会造成程序用尽栈空间：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ perl -e &apos;(&quot;a&quot; x 100000) =~ /^(ab?)*$/;&apos;</span><br><span class="line">Segmentation fault (core dumped)</span><br><span class="line">$</span><br></pre></td></tr></table></figure></p>
+<p>　　<strong>字符集</strong>  现代的正则引擎需要处理如Unicode这样的非ASCⅡ字符集。Plan 9正则表达式库通过在每一步中使用单个Unicode字符作为NFA的输入来实现对Unicode字符集的支持。这个库通过对输入的字符译码来拆解NFA的运行。这样使用同样的正则表达式匹配代码就可以同时支持UTF-8和宽字符的字符集。</p>
+<h2 id="历史介绍"><a href="#历史介绍" class="headerlink" title="历史介绍"></a>历史介绍</h2><h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>　　这两节就不翻译了，想了解的同学自己看看原文吧。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/正则表达式/" rel="tag">#正则表达式</a>
+          
+            <a href="/tags/正则引擎/" rel="tag">#正则引擎</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/26/simpleandfast3/" rel="next" title="正则引擎入门——正则文法匹配可以简单快捷(三)">
+                <i class="fa fa-chevron-left"></i> 正则引擎入门——正则文法匹配可以简单快捷(三)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/07/31/vmapproach1/" rel="prev" title="正则引擎入门——基于虚拟机的正则匹配(一)">
+                正则引擎入门——基于虚拟机的正则匹配(一) <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/07/28/simpleandfast4/"
+           data-title="正则引擎入门——正则文法匹配可以简单快捷(四)" data-url="http://ylonelyhub.com/2016/07/28/simpleandfast4/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="YLonely" />
+          <p class="site-author-name" itemprop="name">YLonely</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#性能表现"><span class="nav-number">2.1.</span> <span class="nav-text">性能表现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#储存NFA建立DFA"><span class="nav-number">2.2.</span> <span class="nav-text">储存NFA建立DFA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#真正的正则表达式"><span class="nav-number">2.3.</span> <span class="nav-text">真正的正则表达式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#历史介绍"><span class="nav-number">2.4.</span> <span class="nav-text">历史介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">2.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YLonely</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"ylonely"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

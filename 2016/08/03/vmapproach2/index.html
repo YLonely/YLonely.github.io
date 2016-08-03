@@ -1,0 +1,615 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic|courier new:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="正则引擎,虚拟机," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文非递归回溯实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="正则引擎入门——基于虚拟机的正则匹配(二)">
+<meta property="og:url" content="http://ylonelyhub.com/2016/08/03/vmapproach2/index.html">
+<meta property="og:site_name" content="New thinking">
+<meta property="og:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文非递归回溯实">
+<meta property="og:updated_time" content="2016-08-03T07:03:53.146Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="正则引擎入门——基于虚拟机的正则匹配(二)">
+<meta name="twitter:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文非递归回溯实">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+</script>
+
+
+
+
+  <link rel="canonical" href="http://ylonelyhub.com/2016/08/03/vmapproach2/"/>
+
+  <title> 正则引擎入门——基于虚拟机的正则匹配(二) | New thinking </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">New thinking</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Every little step</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                正则引擎入门——基于虚拟机的正则匹配(二)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-03T13:03:51+08:00" content="2016-08-03">
+              2016-08-03
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/08/03/vmapproach2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/03/vmapproach2/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp2.html" target="_blank" rel="external">Regular Expression Matching: the Virtual Machine Approach</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/" target="_blank" rel="external">https://swtch.com/~rsc/regexp/</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="非递归回溯实现"><a href="#非递归回溯实现" class="headerlink" title="非递归回溯实现"></a>非递归回溯实现</h2><p>　　递归的回溯实现形式会持续运行一个线程直到它终止，并且以颠倒的顺序运行被创建的线程（新的最先运行）。等待运行得线程并没有被明确的编码，相反的，它们被间接地以<em>pc</em>和<em>sp</em>的值的方式存储在了C的调用栈中。如果同一时刻有过多的线程等待运行，C的调用栈可能会溢出，造成难以调试的错误。这种问题最常出现在处理重复如 .* 的时候，它会在每一个字符之后都创建一个新的线程（正如上边的例子中的<em>a+</em>所做的那样）。这会在多线程的程序中造成很大的困扰，因为它们常常对栈的大小有所限制，同时也没有对于栈溢出的硬件检查。<br>　　我们可以显式的维护一个线程栈代替C的调用栈来避免栈溢出。开始之前，我们定义一个<code>Thread</code>结构体和一个简单的构造函数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> Thread </span><br><span class="line">&#123;</span><br><span class="line">    Inst *pc;</span><br><span class="line">    <span class="keyword">char</span> *sp;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">Thread <span class="title">thread</span><span class="params">(Inst *pc, <span class="keyword">char</span> *sp)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>　　然后虚拟机会重复地把线程从<em>ready</em>列表中取出并让它运行到结束。如果一个线程匹配成功了，那么我们可以提前结束：剩下的线程没有必要再运行了。如果所有线程在结束前都没有匹配成功，那匹配失败了。我们对等待运行的线程数量设置一个简单的限制，当到达这个最大值时，程序会报错。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">backtrackingvm</span><span class="params">(Inst *prog, <span class="keyword">char</span> *input)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">enum</span> &#123; MAXTHREAD = <span class="number">1000</span> &#125;;</span><br><span class="line">    Thread ready[MAXTHREAD];</span><br><span class="line">    <span class="keyword">int</span> nready;</span><br><span class="line">    Inst *pc;</span><br><span class="line">    <span class="keyword">char</span> *sp;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* queue initial thread */</span></span><br><span class="line">    ready[<span class="number">0</span>] = thread(prog, input);</span><br><span class="line">    nready = <span class="number">1</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* run threads in stack order */</span></span><br><span class="line">    <span class="keyword">while</span>(nready &gt; <span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">        --nready;  <span class="comment">/* pop state for next thread to run */</span></span><br><span class="line">        pc = ready[nready].pc;</span><br><span class="line">        sp = ready[nready].sp;</span><br><span class="line">        <span class="keyword">for</span>(;;)</span><br><span class="line">		&#123;</span><br><span class="line">            <span class="keyword">switch</span>(pc-&gt;opcode)</span><br><span class="line">			&#123;</span><br><span class="line">            	<span class="keyword">case</span> Char:</span><br><span class="line">                	<span class="keyword">if</span>(*sp != pc-&gt;c)</span><br><span class="line">                    	<span class="keyword">goto</span> Dead;</span><br><span class="line">                	pc++;</span><br><span class="line">                	sp++;</span><br><span class="line">                	<span class="keyword">continue</span>;</span><br><span class="line">            	<span class="keyword">case</span> Match:</span><br><span class="line">                	return <span class="number">1</span>;</span><br><span class="line">            	<span class="keyword">case</span> Jmp:</span><br><span class="line">                	pc = pc-&gt;x;</span><br><span class="line">                	<span class="keyword">continue</span>;</span><br><span class="line">            	<span class="keyword">case</span> Split:</span><br><span class="line">                	<span class="keyword">if</span>(nready &gt;= MAXTHREAD)</span><br><span class="line">					&#123;</span><br><span class="line">                    	<span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"regexp overflow"</span>);</span><br><span class="line">                    	return <span class="number">-1</span>;</span><br><span class="line">                	&#125;</span><br><span class="line">                	<span class="comment">/* queue new thread */</span></span><br><span class="line">                	ready[nready++] = thread(pc-&gt;y, sp);</span><br><span class="line">                	pc = pc-&gt;x;  <span class="comment">/* continue current thread */</span></span><br><span class="line">                	<span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    Dead:;</span><br><span class="line">    &#125;</span><br><span class="line">    return <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　这个实现与<code>recursive</code>和<code>recursiveloop</code>的性能表现是一致的，它只不过没有使用C的栈而已。让我们比较一下两者的<code>Split</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* recursiveloop */</span></span><br><span class="line"><span class="keyword">case</span> Split:</span><br><span class="line">    <span class="keyword">if</span>(recursiveloop(pc-&gt;x, sp))</span><br><span class="line">        return <span class="number">1</span>;</span><br><span class="line">    pc = pc-&gt;y;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">/* backtrackingvm */</span></span><br><span class="line"><span class="keyword">case</span> Split:</span><br><span class="line">    <span class="keyword">if</span>(nready &gt;= MAXTHREAD)</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"regexp overflow"</span>);</span><br><span class="line">        return <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* queue new thread */</span></span><br><span class="line">    ready[nready++] = thread(pc-&gt;y, sp);</span><br><span class="line">    pc = pc-&gt;x;  <span class="comment">/* continue current thread */</span></span><br><span class="line">    <span class="keyword">continue</span>;</span><br></pre></td></tr></table></figure></p>
+<p>　　两者都展现出了回溯，但是<code>backtrackingvm</code>的代码是显式实现的，而<code>recursiveloop</code>的代码是隐式实现的：在递归之后将PC和SP都保存起来这样在当前线程失败之后还可以尝试其他线程。显式的维护线程栈为增加溢出检查提供了可能性。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/正则引擎/" rel="tag">#正则引擎</a>
+          
+            <a href="/tags/虚拟机/" rel="tag">#虚拟机</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/07/31/vmapproach1/" rel="next" title="正则引擎入门——基于虚拟机的正则匹配(一)">
+                <i class="fa fa-chevron-left"></i> 正则引擎入门——基于虚拟机的正则匹配(一)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/08/03/vmapproach2/"
+           data-title="正则引擎入门——基于虚拟机的正则匹配(二)" data-url="http://ylonelyhub.com/2016/08/03/vmapproach2/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="YLonely" />
+          <p class="site-author-name" itemprop="name">YLonely</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">7</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#非递归回溯实现"><span class="nav-number">2.1.</span> <span class="nav-text">非递归回溯实现</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YLonely</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"ylonely"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

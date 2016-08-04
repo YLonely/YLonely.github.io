@@ -524,7 +524,7 @@
       
         
           <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/">https://swtch.com/~rsc/regexp/</a></p>
-<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="性能表现"><a href="#性能表现" class="headerlink" title="性能表现"></a>性能表现</h2><p>　　前文中我们所提到的C语言的实现并未按照效率优先的方式编写，但即便如此，当我们的输入足够巨大的时候，一个线性时间复杂度的实现算法要远快与拥有指数时间复杂度的实现方法。我们用被称为病态的正则表达式去测试如今几个比较流行的正则引擎后得到的结果证明了上边的观点。<br>　　考虑一下a?<sup>n</sup>a<sup>n</sup>这一正则表达式。它可以匹配a<sup>n</sup>。当a?选择不去匹配任何的字符的时候，整个字符串都会被后边的a<sup>n</sup>所匹配。拥有回溯功能的正则引擎会在遇到零个或一个的符号 ? 时优先去匹配一个，之后才是零个。对于a?<sup>n</sup>a<sup>n</sup>来说，便有n个选择，一共就会产生2<sup>n</sup>种可能性。而只有最后一种可能性——为所有的 ? 均选择为不匹配才可以最终匹配成功。因此采用回溯的正则引擎会需要<em>O</em>(2<sup>n</sup>)的时间，所以当n大于25的时候，匹配所需的时间就相当可观了。<br>　　相反的，Thompson的算法在匹配长度为n的字符串，并在同时维护一个长度为n的状态列表所需要的匹配时间为<em>O</em>(n<sup>2</sup>)（整个的时间复杂度是超线性的，因为在输入增加的情况下，正则表达式不一定是恒定的，因此当我们使用长度为m的正则表达式去匹配长度为n的文本的时候，Thompson算法的时间复杂度为<em>O</em>(mn)）<br>　　下图展示了在不同的正则引擎下使用a?<sup>n</sup>a<sup>n</sup>去匹配a<sup>n</sup>所需的时间：<br><img src="/source/img/grep1p.png" alt="time graph">
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="性能表现"><a href="#性能表现" class="headerlink" title="性能表现"></a>性能表现</h2><p>　　前文中我们所提到的C语言的实现并未按照效率优先的方式编写，但即便如此，当我们的输入足够巨大的时候，一个线性时间复杂度的实现算法要远快与拥有指数时间复杂度的实现方法。我们用被称为病态的正则表达式去测试如今几个比较流行的正则引擎后得到的结果证明了上边的观点。<br>　　考虑一下a?<sup>n</sup>a<sup>n</sup>这一正则表达式。它可以匹配a<sup>n</sup>。当a?选择不去匹配任何的字符的时候，整个字符串都会被后边的a<sup>n</sup>所匹配。拥有回溯功能的正则引擎会在遇到零个或一个的符号 ? 时优先去匹配一个，之后才是零个。对于a?<sup>n</sup>a<sup>n</sup>来说，便有n个选择，一共就会产生2<sup>n</sup>种可能性。而只有最后一种可能性——为所有的 ? 均选择为不匹配才可以最终匹配成功。因此采用回溯的正则引擎会需要<em>O</em>(2<sup>n</sup>)的时间，所以当n大于25的时候，匹配所需的时间就相当可观了。<br>　　相反的，Thompson的算法在匹配长度为n的字符串，并在同时维护一个长度为n的状态列表所需要的匹配时间为<em>O</em>(n<sup>2</sup>)（整个的时间复杂度是超线性的，因为在输入增加的情况下，正则表达式不一定是恒定的，因此当我们使用长度为m的正则表达式去匹配长度为n的文本的时候，Thompson算法的时间复杂度为<em>O</em>(mn)）<br>　　下图展示了在不同的正则引擎下使用a?<sup>n</sup>a<sup>n</sup>去匹配a<sup>n</sup>所需的时间：<br><img src="/img/grep1p.png" alt="time graph">
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/07/28/正则引擎入门——正则文法匹配可以简单快捷(四)/#more" rel="contents">
               阅读全文 &raquo;
@@ -628,7 +628,7 @@
       
         
           <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/">https://swtch.com/~rsc/regexp/</a></p>
-<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="正则表达式搜索算法"><a href="#正则表达式搜索算法" class="headerlink" title="正则表达式搜索算法"></a>正则表达式搜索算法</h2><p>　　现在我们已经有了确定一个正则表达式是否匹配一个字符串的方法，将正则表达式转换为NFA之后以字符串为输入运行该NFA。记住NFA在面对多个选择的下一状态时能够很好地选择下一状态。而使用普通的计算机运行NFA时我们必须找到一个能够模拟这一能力的方法。<br>　　一种模拟猜测多种选择的方法是首先选择一个方向进行匹配，如果匹配失败，就选择余下方向中的一个。举个例子，考虑用abab|abbb的NFA去匹配字符串abbb：<br><img src="/source/img/fig10.png" alt="NFA for abab|abbb"><br><img src="/source/img/fig11.png" alt="every steps">
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="正则表达式搜索算法"><a href="#正则表达式搜索算法" class="headerlink" title="正则表达式搜索算法"></a>正则表达式搜索算法</h2><p>　　现在我们已经有了确定一个正则表达式是否匹配一个字符串的方法，将正则表达式转换为NFA之后以字符串为输入运行该NFA。记住NFA在面对多个选择的下一状态时能够很好地选择下一状态。而使用普通的计算机运行NFA时我们必须找到一个能够模拟这一能力的方法。<br>　　一种模拟猜测多种选择的方法是首先选择一个方向进行匹配，如果匹配失败，就选择余下方向中的一个。举个例子，考虑用abab|abbb的NFA去匹配字符串abbb：<br><img src="/img/fig10.png" alt="NFA for abab|abbb"><br><img src="/img/fig11.png" alt="every steps">
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/07/26/正则引擎入门——正则文法匹配可以简单快捷(三)/#more" rel="contents">
               阅读全文 &raquo;
@@ -836,7 +836,7 @@
       
         
           <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp1.html">Regular Expression Matching Can Be Simple And Fast</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/">https://swtch.com/~rsc/regexp/</a></p>
-<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>　　下图是两种不同的正则引擎的匹配时间图。一个是被广泛应用于许多语言的标准解释器中，其中包括Perl。而另外一个则只被用到了少数的几个地方，比较出名的是awk和grep。这两种匹配方式有着相当不同的性能表现。<br><img src="/source/img/grep3p.png" alt="Perl match"><img src="/source/img/grep4p.png" alt="NFA match">
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>　　下图是两种不同的正则引擎的匹配时间图。一个是被广泛应用于许多语言的标准解释器中，其中包括Perl。而另外一个则只被用到了少数的几个地方，比较出名的是awk和grep。这两种匹配方式有着相当不同的性能表现。<br><img src="/img/grep3p.png" alt="Perl match"><img src="/img/grep4p.png" alt="NFA match">
           <div class="post-more-link text-center">
             <a class="btn" href="/2016/07/22/正则引擎入门——正则文法匹配可以简单快捷(一)/#more" rel="contents">
               阅读全文 &raquo;

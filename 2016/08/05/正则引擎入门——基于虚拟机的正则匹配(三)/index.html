@@ -1,0 +1,630 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic|courier new:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="虚拟机,正则引擎," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文Pike实现">
+<meta property="og:type" content="article">
+<meta property="og:title" content="正则引擎入门——基于虚拟机的正则匹配(三)">
+<meta property="og:url" content="http://ylonelyhub.com/2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/index.html">
+<meta property="og:site_name" content="New thinking">
+<meta property="og:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文Pike实现">
+<meta property="og:updated_time" content="2016-08-05T12:44:13.370Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="正则引擎入门——基于虚拟机的正则匹配(三)">
+<meta name="twitter:description" content="前言　　整篇文章是对作者Russ Cox的文章Regular Expression Matching: the Virtual Machine Approach的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。侵删　　该作者所有的文章的网址在此：https://swtch.com/~rsc/regexp/
+正文Pike实现">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+
+  <link rel="canonical" href="http://ylonelyhub.com/2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/"/>
+
+  <title> 正则引擎入门——基于虚拟机的正则匹配(三) | New thinking </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">New thinking</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Every little step</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                正则引擎入门——基于虚拟机的正则匹配(三)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-08-05T10:17:56+08:00" content="2016-08-05">
+              2016-08-05
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　整篇文章是对作者<strong>Russ Cox</strong>的文章<em><a href="https://swtch.com/~rsc/regexp/regexp2.html" target="_blank" rel="external">Regular Expression Matching: the Virtual Machine Approach</a></em>的翻译，在我看来，该文章是入门正则引擎的较好的文章之一，读者在阅读之前，最好有一定的正则表达式的基础。翻译内容仅代表作者观点。<strong>侵删</strong><br>　　该作者所有的文章的网址在此：<a href="https://swtch.com/~rsc/regexp/" target="_blank" rel="external">https://swtch.com/~rsc/regexp/</a></p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="Pike实现"><a href="#Pike实现" class="headerlink" title="Pike实现"></a>Pike实现</h2><p>　　在“线程化”的实现，如<code>thompsonvm</code>中，我们简单地将保存后的指针加入到线程的状态中。Rob Pike首先于文本编辑器<em>sam</em>中使用了这种实现方式。<br><a id="more"></a><br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> Thread</span><br><span class="line">&#123;</span><br><span class="line">	Inst *pc;</span><br><span class="line">	<span class="keyword">char</span> *saved[<span class="number">20</span>];  <span class="comment">/* $0 through $9 */</span></span><br><span class="line">&#125;;</span><br><span class="line"><span class="function">Thread <span class="title">thread</span><span class="params">(Inst *pc, <span class="keyword">char</span> **saved)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">pikevm</span><span class="params">(Inst *prog, <span class="keyword">char</span> *input, <span class="keyword">char</span> **saved)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> len;</span><br><span class="line">    ThreadList *clist, *nlist;</span><br><span class="line">    Inst *pc;</span><br><span class="line">    <span class="keyword">char</span> *sp;</span><br><span class="line">    Thread t;</span><br><span class="line">    </span><br><span class="line">    len = proglen(prog);  <span class="comment">/* # of instructions */</span></span><br><span class="line">    clist = threadlist(len);</span><br><span class="line">    nlist = threadlist(len);</span><br><span class="line"></span><br><span class="line">    addthread(clist, thread(prog, saved));</span><br><span class="line">    <span class="keyword">for</span>(sp=input; *sp; sp++)</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="keyword">for</span>(i=<span class="number">0</span>; i&gt;clist.n; i++)</span><br><span class="line">		&#123;</span><br><span class="line">            t = clist.t[i];</span><br><span class="line">            <span class="keyword">switch</span>(pc-&gt;opcode)</span><br><span class="line">			&#123;</span><br><span class="line">            	<span class="keyword">case</span> Char:</span><br><span class="line">                	<span class="keyword">if</span>(*sp != pc-&gt;c)</span><br><span class="line">                   	 <span class="keyword">break</span>;</span><br><span class="line">               	 addthread(nlist, thread(t.pc+<span class="number">1</span>, t.saved));</span><br><span class="line">               	 <span class="keyword">break</span>;</span><br><span class="line">           	 <span class="keyword">case</span> Match:</span><br><span class="line">                	memmove(saved, t.saved, <span class="keyword">sizeof</span> t.saved);</span><br><span class="line">                	return <span class="number">1</span>;</span><br><span class="line">          	  <span class="keyword">case</span> Jmp:</span><br><span class="line">                	addthread(clist, thread(t.pc-&gt;x, t.saved));</span><br><span class="line">                	<span class="keyword">break</span>;</span><br><span class="line">           	 <span class="keyword">case</span> Split:</span><br><span class="line">               	 addthread(clist, thread(t.pc-&gt;x, t.saved));</span><br><span class="line">                	addthread(clist, thread(t.pc-&gt;y, t.saved));</span><br><span class="line">               	 <span class="keyword">break</span>;</span><br><span class="line">         	   <span class="keyword">case</span> Save:</span><br><span class="line">                	t.saved[t-&gt;pc.i] = sp;</span><br><span class="line">                	addthread(clist, thread(t.pc-&gt;x, t.saved));</span><br><span class="line">                	<span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        swap(clist, nlist);</span><br><span class="line">        clear(nlist);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　<code>case Save</code>下的代码较<code>recursiveloop</code>更加简单，因为每一个线程都有自己的<code>saved</code>的备份，因此没有必要恢复旧的值。<br>　　在Thompson的虚拟机中，<code>addthread</code>通过为每一个可能的PC值保留一个线程，可以将线程列表的长度限制为<em>n</em>，即编译后程序的长度。在Pike的虚拟机中，线程的状态更大了，它包含了存储的字符指针，但是<code>addthread</code>依旧可以只为每一个可能的PC保留一个线程，这是因为保存的指针不会影响到虚拟机之后的执行，它们只会记录下过去的执行状态。两个具有相同的PC的线程，即便他们有不同的保存的指针，他们的执行过程都是一致的，因此对每个PC只需维护一个线程。</p>
+<h2 id="不明确的局部匹配"><a href="#不明确的局部匹配" class="headerlink" title="不明确的局部匹配"></a>不明确的局部匹配</h2><p>　　有些时候，正则表达式有不止一种方法去匹配一个字符串。一个简单的例子，让我们考虑用&lt;.*&gt;匹配&lt;html&gt;&lt;/html&gt;，那表达式是只匹配&lt;html&gt;呢还是匹配整个&lt;html&gt;&lt;/html&gt;呢？换句话说，表达式 .* 是只匹配html还是匹配html&gt;&lt;/html？Perl，正则表达式实现的标准，使用了第二种匹配方式。在这种情况下，* 是“贪婪的”(greedy)，它尽可能的匹配更多的字符串。<br>　　要求 *变得贪婪本质上为每一个线程的执行引入了优先权的概念。我们可以在虚拟机中加入这种权值概念，通过让<code>split</code>指令在两个参数都会匹配成功的情况下优先选择更靠前的匹配参数。<br>　　使用更新之后的<code>split</code>，我们只要保证<em>e</em>*,<em>e</em>?,<em>e</em>+优先选择匹配e更多的那个路径，就可以实现贪婪的操作符。Perl同时也引入了非贪婪的操作符 <em>e</em>*?，<em>e</em>??，<em>e</em>+?，它们会尽可能少的去匹配字符。我们可以将<code>split</code>的两个参数反转一下，这样就可以优先选择较少的匹配。<br>　　详细的代码序列如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">greedy (same as above)		non-greedy</span><br><span class="line"></span><br><span class="line">e?				e??</span><br><span class="line">	split L1, L2			split L2, L1</span><br><span class="line">	L1: codes for e			L1: codes for e</span><br><span class="line">	L2:				L2:</span><br><span class="line">e*				e*?	  </span><br><span class="line">	L1: split L2, L3		L1: split L3, L2</span><br><span class="line">	L2: codes for e			L2: codes for e</span><br><span class="line">	jmp L1				jmp L1</span><br><span class="line">	L3:				L3:</span><br><span class="line">e+				ee+?</span><br><span class="line">	L1: codes for e			L1: codes for e	</span><br><span class="line">	split L1, L3			split L3, L1</span><br><span class="line">	L3:				L3:</span><br></pre></td></tr></table></figure></p>
+<p>　　前文中给出的回溯的实现方式已经按照我们之前定义的方式将split赋予了优先级，但要看清楚这一点需要多花点时间。<code>recursiveloop</code>和<code>recursive</code>的实现方式在尝试<code>pc-&gt;y</code>之前会尝试<code>pc-&gt;x</code>。<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* recursive */</span></span><br><span class="line"><span class="keyword">case</span> Split:</span><br><span class="line">    <span class="keyword">if</span>(recursive(pc-&gt;x, sp))</span><br><span class="line">        return <span class="number">1</span>;</span><br><span class="line">    return recursive(pc-&gt;y, sp);</span><br><span class="line"></span><br><span class="line"><span class="comment">/* recursiveloop */</span></span><br><span class="line"><span class="keyword">case</span> Split:</span><br><span class="line">    <span class="keyword">if</span>(recursiveloop(pc-&gt;x, sp))</span><br><span class="line">        return <span class="number">1</span>;</span><br><span class="line">    pc = pc-&gt;y;</span><br><span class="line">    <span class="keyword">continue</span>;</span><br></pre></td></tr></table></figure></p>
+<p>　　<code>backtrackingvm</code>实现方式会为优先级较低的<code>pc-&gt;y</code>创建一个新线程，然后继续处理<code>pc-&gt;x</code>：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* backtrackingvm */</span></span><br><span class="line"><span class="keyword">case</span> Split:</span><br><span class="line">    <span class="keyword">if</span>(nready &gt;= MAXTHREAD)&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="built_in">stderr</span>, <span class="string">"regexp overflow"</span>);</span><br><span class="line">        return <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/* queue new thread */</span></span><br><span class="line">    ready[nready++] = thread(pc-&gt;y, sp);</span><br><span class="line">    pc = pc-&gt;x;  <span class="comment">/* continue current thread */</span></span><br><span class="line">    <span class="keyword">continue</span>;</span><br></pre></td></tr></table></figure></p>
+<p>　　因为所有的线程都是在栈中进行管理的，<code>pc-&gt;y</code>的线程不会执行直到所有的由<code>pc-&gt;x</code>产生的线程被尝试并失败之后。这些产生的线程均具有比<code>pc-&gt;y</code>更高的权重。<br>　　上方给出的<code>pikevm</code>的实现方式并没有完全遵守线程的优先级，但是我们可以修改一下。为了实现线程的优先级，我们可以使<code>addthread</code>函数在处理<code>Jmp</code>，<code>Split</code>和<code>Save</code>命令时递归地调用它自身并将这些指令的目标全部加入进线程的列表。（这样就使得<code>addthread</code>函数本质上和<code>addstate</code>函数相同。）这种改变使得<em>clist</em>和<em>nlist</em>中的线程都是按照线程的优先级进行排列的，从高优先到低优先。这样<code>pikevm</code>中的处理循环就会按照线程的优先级进行尝试，同时修改之后的<code>addthread</code>可以保证在加入某一个优先级的线程所产生的新线程之后才去考虑更低优先级的线程所产生的新线程。<br>　　<code>pickvm</code>的修改遵照着这样一个事实：递归调用会遵守线程的优先级。新的程序在处理单个字符的时候会使用递归，这样<em>nlist</em>中的线程会遵循线程的优先级，同时我们依旧使用单步模式保持较好的时间复杂度。因为<em>nlist</em>中的线程都遵循优先级，因此我们只为一个PC保留一个线程的做法是安全的，因为最先看到的线程具有更高的优先级因此也需要被存储起来。<br>　　<code>pikevm</code>中还有一处需要修改，当一个匹配被找到后，在这之后执行的<em>clist</em>中的线程（具有较低的优先级）需要全部切断，但是更高优先级的线程需要继续执行去匹配可能的更长的字符串。<code>pikevm</code>的新的主循环如下：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span>(i=<span class="number">0</span>; i&lt;clist.n ;i++)</span><br><span class="line">&#123;</span><br><span class="line">    pc = clist.t[i].pc;</span><br><span class="line">    <span class="keyword">switch</span>(pc-&gt;opcode)</span><br><span class="line">	&#123;</span><br><span class="line">    	<span class="keyword">case</span> Char:</span><br><span class="line">        	<span class="keyword">if</span>(*sp != pc-&gt;c)</span><br><span class="line">            	<span class="keyword">break</span>;</span><br><span class="line">        	addthread(nlist, thread(pc+<span class="number">1</span>), sp+<span class="number">1</span>);</span><br><span class="line">        	<span class="keyword">break</span>;</span><br><span class="line">    	<span class="keyword">case</span> Match:</span><br><span class="line">        	saved = t.saved;  <span class="comment">// save end pointer</span></span><br><span class="line">        	matched = <span class="number">1</span>;</span><br><span class="line">        	clist.n = <span class="number">0</span>;</span><br><span class="line">        	<span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　相同的修改也可以用在<code>thompsonvm</code>中，但是由于它不记录局部匹配的位置，因此唯一可见的改变便是当有匹配时它所选择的结束指针的位置。这样的改变会让<code>thompsonvm</code>与回溯的实现做出相同的选择。这在下一篇文章中十分有用。<br>　　不同的实现方式可以使用另外的标准去挑选线程组，如直接去比较局部匹配后的指针组。第八版的Unix函数库使用左端最长匹配作为标准，以此来模仿基于DFA的工具，如awk和egrep。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/虚拟机/" rel="tag">#虚拟机</a>
+          
+            <a href="/tags/正则引擎/" rel="tag">#正则引擎</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/03/正则引擎入门——基于虚拟机的正则匹配(二)/" rel="next" title="正则引擎入门——基于虚拟机的正则匹配(二)">
+                <i class="fa fa-chevron-left"></i> 正则引擎入门——基于虚拟机的正则匹配(二)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/"
+           data-title="正则引擎入门——基于虚拟机的正则匹配(三)" data-url="http://ylonelyhub.com/2016/08/05/正则引擎入门——基于虚拟机的正则匹配(三)/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="YLonely" />
+          <p class="site-author-name" itemprop="name">YLonely</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">8</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Pike实现"><span class="nav-number">2.1.</span> <span class="nav-text">Pike实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不明确的局部匹配"><span class="nav-number">2.2.</span> <span class="nav-text">不明确的局部匹配</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YLonely</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"ylonely"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

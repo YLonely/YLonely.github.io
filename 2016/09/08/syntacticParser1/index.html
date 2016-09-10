@@ -1,0 +1,647 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.useso.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic|courier new:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="编译原理,语法分析," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="前言　　该项目是我在学习编译原理的时候所完成的一个项目，不同于成熟的yacc语法分析器，我的语法检查器通过和一个词法分析器相互配合，启动之前读入由BNF范式和正则表达式所描述的文法与词法，之后根据给定的文法对给出的代码文件进行检查，并指出文件中的错误。整个文法的解析以LR(1)为基础，总共的代码量为800左右（不包括词法分析器），完整的代码请移步Configurable-syntactic-ana">
+<meta property="og:type" content="article">
+<meta property="og:title" content="编译原理——基于LR(1)的语法检查器(一)">
+<meta property="og:url" content="http://ylonelyhub.com/2016/09/08/syntacticParser1/index.html">
+<meta property="og:site_name" content="New thinking">
+<meta property="og:description" content="前言　　该项目是我在学习编译原理的时候所完成的一个项目，不同于成熟的yacc语法分析器，我的语法检查器通过和一个词法分析器相互配合，启动之前读入由BNF范式和正则表达式所描述的文法与词法，之后根据给定的文法对给出的代码文件进行检查，并指出文件中的错误。整个文法的解析以LR(1)为基础，总共的代码量为800左右（不包括词法分析器），完整的代码请移步Configurable-syntactic-ana">
+<meta property="og:updated_time" content="2016-09-10T03:34:31.331Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="编译原理——基于LR(1)的语法检查器(一)">
+<meta name="twitter:description" content="前言　　该项目是我在学习编译原理的时候所完成的一个项目，不同于成熟的yacc语法分析器，我的语法检查器通过和一个词法分析器相互配合，启动之前读入由BNF范式和正则表达式所描述的文法与词法，之后根据给定的文法对给出的代码文件进行检查，并指出文件中的错误。整个文法的解析以LR(1)为基础，总共的代码量为800左右（不包括词法分析器），完整的代码请移步Configurable-syntactic-ana">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+
+  <link rel="canonical" href="http://ylonelyhub.com/2016/09/08/syntacticParser1/"/>
+
+  <title> 编译原理——基于LR(1)的语法检查器(一) | New thinking </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">New thinking</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Every little step</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                编译原理——基于LR(1)的语法检查器(一)
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-09-08T20:27:40+08:00" content="2016-09-08">
+              2016-09-08
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/09/08/syntacticParser1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/08/syntacticParser1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　该项目是我在学习编译原理的时候所完成的一个项目，不同于成熟的yacc语法分析器，我的语法检查器通过和一个词法分析器相互配合，启动之前读入由BNF范式和正则表达式所描述的文法与词法，之后根据给定的文法对给出的代码文件进行检查，并指出文件中的错误。整个文法的解析以LR(1)为基础，总共的代码量为800左右（不包括词法分析器），完整的代码请移步<a href="https://github.com/YLonely/Configurable-syntactic-analyzer" target="_blank" rel="external"><em>Configurable-syntactic-analyzer</em></a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="理论介绍"><a href="#理论介绍" class="headerlink" title="理论介绍"></a>理论介绍</h2><p>　　一般说来，常用的语法分析技术有两种，一种是自顶向下的，另一种是自底向上的，对于LL(1)型的文法来说，我们一般使用自顶向下的分析方式例如递归下降或者构造预测分析器的方式进行文法的解析，而其中递归下降分析法经常在手写的语法分析器中用到，这种方式对于大部分比较简单的文法是十分实用的，递归下降写起来也十分的方便。虽然LL(1)的文法足以描述大部分程序设计的构造，但是却无法描述左递归的文法以及二义性的文法，而在程序设计中，左递归的文法是经常出现的，例如<code>S-&gt;Sab</code>这样的产生式便是左递归的，因此递归下降的方式在此时并不适用，因此我们需要将左递归的文法经过某些变换，使它变为非递归的文法，但这种变换常常使得文法面目全非，而且实现起来也比较困难，因此我们提出了基于LR(k)的语法分析的概念。<a id="more"></a><br>　　LR语法分析技术是通过自底向上的方式进行语法分析的，而我们引入这种方法的原因有以下几点(摘自龙书):</p>
+<ul>
+<li>对于几乎所有的程序设计语言，只要能够写出该构造的上下文无关文法，就能够构造出识别该构造的LR语法分析器。</li>
+<li>LR语法分析方法是已知的最通用的无回溯的移入-规约分析技术。</li>
+<li>一个LR语法分析器可以在对输入进行从左到右扫描时尽可能早的检测到错误。</li>
+<li>可以使用LR方法进行语法分析的文法类是可以使用预测方法或LL方法进行语法分析的文法类的真超集。</li>
+</ul>
+<p>　　由此可见，LR语法分析技术的能力是十分强大的，LR语法分析技术一般来说有三种，一种是SLR(简单LR技术)，LR(规范LR技术)，LALR(向前看LR技术)。相较之下，规范LR技术的分析能力最强，但是占用的系统资源也最多，鉴于规范LR的典型性，因此我的语法检查器使用的规范LR技术。无论哪一种LR技术，在使用时都要经过如下的几个步骤：</p>
+<ol>
+<li>根据给定的文法构造出该文法的<em>规范LR(k)项集族</em>。</li>
+<li>根据<em>规范LR(k)项集族</em>构造出语法分析表。</li>
+<li>在运行时根据语法分析表进行相应的移入，规约操作。</li>
+</ol>
+<p>　　而本文则会针对以上三个步骤提供一个具体可行的实现方案，从而构造出一个简单的语法检查器。</p>
+<h2 id="配置文件"><a href="#配置文件" class="headerlink" title="配置文件"></a>配置文件</h2><p>　　对于描述文法的配置文件，我以龙书上的文法描述方式为基础，在实际使用的时候做了一些修改，方便我对文法进行解析，首先文法中出现的所有终结符必须在文法之前注明，并且在这些终结符之前写上统一的标识”%token”并在结尾写上分号，所有的产生式需要用’ { ‘以及’ } ‘包裹起来。对于文法来说，文法应该写成增广文法的形式，即第一个产生式写成<code>S&#39;-&gt;S</code>的形式，其次产生式的箭头”-&gt;”被修改为冒号’ : ‘，符号和或连接符’ | ‘之间无空格，最后在产生式的结尾处应加上分号’ ; ‘。因此，如下的文法格式：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">S-&gt;L = R | R</span><br><span class="line">L-&gt;* R | id</span><br><span class="line">R-&gt;L</span><br></pre></td></tr></table></figure></p>
+<p>会被改写为<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">%token = * id;</span><br><span class="line">&#123;</span><br><span class="line">S&apos;:S;</span><br><span class="line">S:L = R|R;</span><br><span class="line">L:* R|id;</span><br><span class="line">R:L;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　<code>%token</code>标识符后边的所有符号均应该在词法分析器的配置文件中使用正则表达式进行描述，例如上述的文法在配置文件中就应该被描述为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">id:[_0-9a-zA-Z]+</span><br><span class="line">*:\*</span><br><span class="line">=:=</span><br></pre></td></tr></table></figure></p>
+<p>　　由于我的词法分析器具有优先匹配的功能，因此需要优先匹配的需要写在前边。关于词法分析器的相关理论以及具体实现详见<a href="http://ylonelyhub.com/2016/07/22/regex-simpleandfast1/">正则引擎入门</a>以及<a href="https://github.com/YLonely/Configurable-lexical-analyzer" target="_blank" rel="external">Configurable-lexical-analyzer</a>。</p>
+<h2 id="配置文件的解析"><a href="#配置文件的解析" class="headerlink" title="配置文件的解析"></a>配置文件的解析</h2><p>　　虽然规范LR技术是本文章的重点，但是在解析配置文件的时候我依旧采用了递归下降的分析方法，这种方法写起来比较方便，也便于理解。我们解析配置文件的目的是要将文法读取进内存，使用某种数据结构将文法中各个符号之间的关系展现出来，便于我们下一步的分析，下面展示的三个结构体可以用来表示一个文法的各个结构：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> _production			<span class="comment">//代表一个产生式</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">char</span> head[<span class="number">20</span>];			<span class="comment">//用于记录产生式的头</span></span><br><span class="line">	<span class="keyword">int</span> p_index;   			<span class="comment">//记录产生式的序号</span></span><br><span class="line">	<span class="keyword">struct</span> _item *items;		<span class="comment">//通过'|'进行分隔的产生式的不同产生体，以链表形式记录。</span></span><br><span class="line">	<span class="keyword">struct</span> _production *next;	<span class="comment">//下一个产生式</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> _item</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">struct</span> _element *ele;	<span class="comment">//以链表形式记录的产生式体中的不同符号</span></span><br><span class="line">	<span class="keyword">struct</span> _item *next;	<span class="comment">//下一个产生式的体</span></span><br><span class="line">	<span class="keyword">int</span> *body;			<span class="comment">//以序号形式记录的产生式的体</span></span><br><span class="line">	<span class="keyword">int</span> body_len;			<span class="comment">//产生式体的长度</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> _element</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">union</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">int</span> t_index;			<span class="comment">//终结符的序号</span></span><br><span class="line">		<span class="keyword">struct</span> _production *pro;<span class="comment">//产生式</span></span><br><span class="line">	&#125;type;</span><br><span class="line">	boolean is_terminator;	<span class="comment">//是否为终结符</span></span><br><span class="line">	<span class="keyword">char</span> terminator_name[<span class="number">20</span>];<span class="comment">//终结符的字符串</span></span><br><span class="line">	<span class="keyword">struct</span> _element *next;	<span class="comment">//下一个符号</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> _element element;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> _item item;</span><br><span class="line"><span class="keyword">typedef</span> <span class="keyword">struct</span> _production production;</span><br></pre></td></tr></table></figure></p>
+<p>　　在看主要的处理函数之前，我们先来看一下一些简单的辅助函数以及全局变量：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">//Recording the productions that are created.</span></span><br><span class="line">production *pro_list = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="comment">//Recording the elements that are created.</span></span><br><span class="line">element *token_list = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="comment">//The num of tokens and also the index of S'</span></span><br><span class="line"><span class="keyword">int</span> token_num = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">int</span> transfer_index = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">char</span> current_str[<span class="number">64</span>];</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> file_ptr = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">char</span> *file_buff = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">advance</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">blank_skip</span><span class="params">()</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">file_load</span><span class="params">(<span class="keyword">char</span> *buff, FILE *fp)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add_t</span><span class="params">(element *e)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add_p</span><span class="params">(production *p)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">is_contain</span><span class="params">(<span class="keyword">char</span> *key)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span>* <span class="title">find_by_key</span><span class="params">(<span class="keyword">char</span> *key)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">match</span><span class="params">(<span class="keyword">char</span> *s)</span></span>;</span><br></pre></td></tr></table></figure></p>
+<p>　　<code>pro_list</code>记录了所有构造出来的产生式或者说所有的非终结符，<code>token_list</code>记录了所有的终结符，<code>token_num</code>记录终结符的数量，<code>transfer_index</code>记录终结符和非终结符的数量，<code>current_str</code>记录了扫描到的字符串，<code>file_buff</code>作为文件缓冲区，<code>file_ptr</code>记录当前读取的字符的数组下标。<code>file_load</code>函数将整个配置文件一次性地读入<code>file_buff</code>中，方便我们接下来的分析，<code>blank_skip</code>函数跳过数组当中所有的无意义的字符，例如空格，制表符等等，直到遇到一个有意义的字符。函数<code>advance</code>读入合法的标志符的字符，并将其放入数组<code>current_str</code>中，直到遇到一个非法字符。函数<code>add_t</code>(<code>add_p</code>)<code>element</code>和(<code>production</code>)加入到<code>token_list</code>(<code>pro_list</code>)中，<code>is_contain</code>查询<code>token_list</code>和<code>pro_list</code>这两个链表中是否有与字符串<code>key</code>相同名字的符号，<code>find_by_key</code>将返回具有相应字符串名字的符号的指针。<code>match</code>函数查看<code>file_ptr</code>所指向的或者接下来的几个字符是否与<code>s</code>相匹配。<br>　　了解了所有的辅助性的要素之后我们来看一下主要的分析函数，首先是一个顶层的驱动函数，没什么可说的就是载入文件之后按情况进行解析，逻辑比较简单：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/*</span><br><span class="line">	Load all the grammar info into a buff,then create the</span><br><span class="line">	structs group to describe the grammar.</span><br><span class="line">*/</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">grammar_load</span><span class="params">(FILE *fp)</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	file_buff = (char*)<span class="built_in">calloc</span>(FILE_LOAD_MAX, sizeof(char));</span><br><span class="line">	file_load(file_buff, fp);</span><br><span class="line">	blank_skip();</span><br><span class="line">	<span class="keyword">if</span> (match(<span class="string">"%token"</span>))</span><br><span class="line">		token_analyze();</span><br><span class="line">	blank_skip();</span><br><span class="line">	<span class="keyword">if</span> (match(<span class="string">"&#123;"</span>))</span><br><span class="line">		pro_analyze();</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		exception(<span class="string">"Illegal grammar form error"</span>, <span class="string">"grammar_load"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　接下来我们看一下处理终结符的函数，因为所有的终结符均需要在文件开始处声明一下。因此需要一个独立的函数对这些终结符进行处理。同时在文法中有两个比较特殊的终结符号，一个是空串的符号ε，它用在产生式体中，表示该产生式可能产生空字符串，在我们的程序中，我们使用<em>EMPTY</em>来表示它。另一个符号是字符串结束符号$，它并不会显式地出现在文法中，只会出现在输入串的结尾处，它表示输入已经到达了终点，没有更多的输入了，在程序中我们使用<em>STRING_END</em>表示。ε和$的序号分别被定义为0和1，因此在处理其他的终结符之前要先将两者加入到记录终结符的链表中：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">token_analyze</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	blank_skip();</span><br><span class="line">	element *e = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="comment">/*</span><br><span class="line">		Add STRING_END and EMPTY token first</span><br><span class="line">	*/</span></span><br><span class="line">	e = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">	e-&gt;is_terminator = TRUE;</span><br><span class="line">	e-&gt;type.t_index = transfer_index;</span><br><span class="line">	<span class="built_in">strcpy</span>(e-&gt;terminator_name, <span class="string">"EMPTY"</span>);</span><br><span class="line">	<span class="keyword">add_t</span>(e);</span><br><span class="line"></span><br><span class="line">	e = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">	e-&gt;is_terminator = TRUE;</span><br><span class="line">	e-&gt;type.t_index = transfer_index;</span><br><span class="line">	<span class="built_in">strcpy</span>(e-&gt;terminator_name, <span class="string">"STRING_END"</span>);</span><br><span class="line">	<span class="keyword">add_t</span>(e);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">while</span> (advance())</span><br><span class="line">	&#123;</span><br><span class="line">		e = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">		e-&gt;is_terminator = TRUE;</span><br><span class="line">		<span class="comment">//temp-&gt;next = NULL;</span></span><br><span class="line">		e-&gt;type.t_index = transfer_index;</span><br><span class="line">		<span class="built_in">strcpy</span>(e-&gt;terminator_name, current_str);</span><br><span class="line">		<span class="keyword">add_t</span>(e);</span><br><span class="line">		blank_skip();</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> (!match(<span class="string">";"</span>))</span><br><span class="line">		exception(<span class="string">"Illegal grammar form error"</span>, <span class="string">"token_analyze"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　接下来是处理产生式的函数，它会检查现在读取到的产生式的头是否已经出现过并记录在了链表中，如果没有就初始化一个，之后再调用产生式体的处理函数，反之则把已经初始化的取出，再调用处理函数：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">pro_analyze</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	<span class="keyword">int</span> contain;</span><br><span class="line">	production *p = (production*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(production));</span><br><span class="line">	production *temp_p = <span class="literal">NULL</span>;</span><br><span class="line">	blank_skip();</span><br><span class="line">	<span class="keyword">while</span> (advance())</span><br><span class="line">	&#123;</span><br><span class="line">		contain = is_contain(current_str);</span><br><span class="line">		<span class="keyword">if</span> (!contain)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="built_in">strcpy</span>(p-&gt;head, current_str);</span><br><span class="line">			p-&gt;p_index = transfer_index;</span><br><span class="line">			<span class="keyword">if</span> (!match(<span class="string">":"</span>))</span><br><span class="line">				exception(<span class="string">"Illegal grammar form error"</span>, <span class="string">"pro_analyze"</span>);</span><br><span class="line">			add_p(p);</span><br><span class="line">			p-&gt;items = items_analyze();</span><br><span class="line">			p = (production*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(production));</span><br><span class="line">		&#125; <span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			temp_p = (production*)find_by_key(current_str);</span><br><span class="line">			<span class="keyword">if</span> (!match(<span class="string">":"</span>))</span><br><span class="line">				exception(<span class="string">"Illegal grammar form error"</span>, <span class="string">"pro_analyze"</span>);</span><br><span class="line"></span><br><span class="line">			temp_p-&gt;items = items_analyze();</span><br><span class="line">		&#125;</span><br><span class="line">		blank_skip();</span><br><span class="line">	&#125;</span><br><span class="line">	match(<span class="string">"&#125;"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　接下来是产生式体的处理函数，它初始化一个<code>item</code>，将具体的符号处理交给<code>elements_analyze</code>，只是简单地记录一下<code>item-&gt;body</code>的信息：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">item* <span class="title">items_analyze</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	item* first_item = (item*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(item));</span><br><span class="line">	item* temp = first_item;</span><br><span class="line">	<span class="keyword">while</span> (TRUE)</span><br><span class="line">	&#123;</span><br><span class="line">		temp-&gt;ele = elements_analyze();</span><br><span class="line">		temp-&gt;body = (int*)<span class="built_in">calloc</span>(BODY_LENGTH, sizeof(int));</span><br><span class="line">		item_body_count(temp);</span><br><span class="line">		<span class="keyword">if</span> (match(<span class="string">"|"</span>))</span><br><span class="line">		&#123;</span><br><span class="line">			temp-&gt;next = (item*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(item));</span><br><span class="line">			temp = temp-&gt;next;</span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (match(<span class="string">";"</span>))</span><br><span class="line">			return first_item;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">			exception(<span class="string">"Illegal grammar form error"</span>, <span class="string">"items_analyze"</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　接下来是产生式体中符号的处理函数，函数的逻辑也比较简单，就是首先判断读取到的这个符号是否已经被记录，如果是，那对终结符或者非终结符分别进行处理，如果不是，那这个符号只能是非终结符（因为规定所有的终结符必须事先声明）：<br><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">element* <span class="title">elements_analyze</span><span class="params">()</span></span><br><span class="line"></span>&#123;</span><br><span class="line">	element* first_element = <span class="literal">NULL</span>;</span><br><span class="line">	element* temp_e = <span class="literal">NULL</span>;</span><br><span class="line">	production* temp_p = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">int</span> contain;</span><br><span class="line">	<span class="keyword">while</span> (advance())</span><br><span class="line">	&#123;</span><br><span class="line">		contain = is_contain(current_str);</span><br><span class="line">		<span class="keyword">if</span> (contain == TOKEN)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (first_element == <span class="literal">NULL</span>)</span><br><span class="line">			&#123;</span><br><span class="line">				first_element = (element*)find_by_key(current_str);</span><br><span class="line">				temp_e = first_element;</span><br><span class="line">			&#125; <span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				temp_e-&gt;next = (element*)find_by_key(current_str);</span><br><span class="line">				temp_e = temp_e-&gt;next;</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125; <span class="keyword">else</span> <span class="keyword">if</span> (contain == PRODUCTION)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (first_element == NULL)</span><br><span class="line">			&#123;</span><br><span class="line">				first_element = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">				<span class="comment">//first_element-&gt;is_terminator = FALSE;</span></span><br><span class="line">				first_element-&gt;type.pro = (production*)find_by_key(current_str);</span><br><span class="line">				temp_e = first_element;</span><br><span class="line">			&#125; <span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				temp_e-&gt;next = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">				<span class="comment">//temp_e-&gt;next-&gt;is_terminator = FALSE;</span></span><br><span class="line">				temp_e-&gt;next-&gt;type.pro = (production*)find_by_key(current_str);</span><br><span class="line">				temp_e = temp_e-&gt;next;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125; <span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			temp_p = (production*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(production));</span><br><span class="line">			temp_p-&gt;p_index = transfer_index;</span><br><span class="line">			<span class="built_in">strcpy</span>(temp_p-&gt;head, current_str);</span><br><span class="line">			add_p(temp_p);</span><br><span class="line">			<span class="keyword">if</span> (first_element == <span class="literal">NULL</span>)</span><br><span class="line">			&#123;</span><br><span class="line">				first_element = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">				first_element-&gt;type.pro = temp_p;</span><br><span class="line">				temp_e = first_element;</span><br><span class="line">			&#125; <span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				temp_e-&gt;next = (element*)<span class="built_in">calloc</span>(<span class="number">1</span>, sizeof(element));</span><br><span class="line">				temp_e-&gt;next-&gt;type.pro = temp_p;</span><br><span class="line">				temp_e = temp_e-&gt;next;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		blank_skip();</span><br><span class="line">	&#125;</span><br><span class="line">	return first_element;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　至此，整个配置文件便已经被处理完毕了，解析完成之后，链表<code>pro_list</code>和<code>token_list</code>分别记录了所有的非终结符与终结符，并且它们之间的指针指向与文法的描述是相一致的，这样的处理是十分方便的，在接下来的文章中我们便会使用这些链表构建出LR(1)项集族以及语法分析表。</p>
+<p>　　</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/编译原理/" rel="tag">#编译原理</a>
+          
+            <a href="/tags/语法分析/" rel="tag">#语法分析</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/08/05/regex-basedonvm3/" rel="next" title="正则引擎入门——基于虚拟机的正则匹配(三)">
+                <i class="fa fa-chevron-left"></i> 正则引擎入门——基于虚拟机的正则匹配(三)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2016/09/08/syntacticParser1/"
+           data-title="编译原理——基于LR(1)的语法检查器(一)" data-url="http://ylonelyhub.com/2016/09/08/syntacticParser1/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="YLonely" />
+          <p class="site-author-name" itemprop="name">YLonely</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">9</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#正文"><span class="nav-number">2.</span> <span class="nav-text">正文</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#理论介绍"><span class="nav-number">2.1.</span> <span class="nav-text">理论介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件"><span class="nav-number">2.2.</span> <span class="nav-text">配置文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#配置文件的解析"><span class="nav-number">2.3.</span> <span class="nav-text">配置文件的解析</span></a></li></ol></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2016</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YLonely</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"ylonely"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>

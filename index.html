@@ -262,6 +262,110 @@
             
               
                 
+                <a class="post-title-link" href="/2016/09/08/syntacticParser1/" itemprop="url">
+                  编译原理——基于LR(1)的语法检查器(一)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-09-08T20:27:40+08:00" content="2016-09-08">
+              2016-09-08
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/09/08/syntacticParser1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/08/syntacticParser1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>　　该项目是我在学习编译原理的时候所完成的一个项目，不同于成熟的yacc语法分析器，我的语法检查器通过和一个词法分析器相互配合，启动之前读入由BNF范式和正则表达式所描述的文法与词法，之后根据给定的文法对给出的代码文件进行检查，并指出文件中的错误。整个文法的解析以LR(1)为基础，总共的代码量为800左右（不包括词法分析器），完整的代码请移步<a href="https://github.com/YLonely/Configurable-syntactic-analyzer"><em>Configurable-syntactic-analyzer</em></a>。</p>
+<h1 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h1><h2 id="理论介绍"><a href="#理论介绍" class="headerlink" title="理论介绍"></a>理论介绍</h2><p>　　一般说来，常用的语法分析技术有两种，一种是自顶向下的，另一种是自底向上的，对于LL(1)型的文法来说，我们一般使用自顶向下的分析方式例如递归下降或者构造预测分析器的方式进行文法的解析，而其中递归下降分析法经常在手写的语法分析器中用到，这种方式对于大部分比较简单的文法是十分实用的，递归下降写起来也十分的方便。虽然LL(1)的文法足以描述大部分程序设计的构造，但是却无法描述左递归的文法以及二义性的文法，而在程序设计中，左递归的文法是经常出现的，例如<code>S-&gt;Sab</code>这样的产生式便是左递归的，因此递归下降的方式在此时并不适用，因此我们需要将左递归的文法经过某些变换，使它变为非递归的文法，但这种变换常常使得文法面目全非，而且实现起来也比较困难，因此我们提出了基于LR(k)的语法分析的概念。
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/09/08/syntacticParser1/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/08/05/regex-basedonvm3/" itemprop="url">
                   正则引擎入门——基于虚拟机的正则匹配(三)
                 </a>
@@ -1111,7 +1215,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">8</span>
+              <span class="site-state-item-count">9</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1121,7 +1225,7 @@
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>

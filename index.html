@@ -262,6 +262,110 @@
             
               
                 
+                <a class="post-title-link" href="/2016/09/11/syntacticParser2/" itemprop="url">
+                  编译原理——基于LR(1)的语法检查器(二)
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2016-09-11T12:57:20+08:00" content="2016-09-11">
+              2016-09-11
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2016/09/11/syntacticParser2/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/09/11/syntacticParser2/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="构造LR-1-项集族"><a href="#构造LR-1-项集族" class="headerlink" title="构造LR(1)项集族"></a>构造LR(1)项集族</h1><p>　　在龙书的P167中为我们提供了为某一个文法G’构造LR(1)项集族的完整算法，照搬如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">SetOfItems CLOSURE(I) &#123;</span><br><span class="line">	repeat</span><br><span class="line">		for(I中的每个项[A-&gt;α·Bβ,a])</span><br><span class="line">			for(G&apos;中的每个产生式B-&gt;γ)</span><br><span class="line">				for(FIRST(βa)每个终结符号b)</span><br><span class="line">					将[B-&gt;·γ,b]加入到集合I中;</span><br><span class="line">	until 不能向I中加入更多的项;</span><br><span class="line">	return I;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">SetOfItems GOTO(I,X) &#123;</span><br><span class="line">	将J初始化为空集;</span><br><span class="line">	for(I中的每个项[A-&gt;α·Xβ,a])</span><br><span class="line">		将项[A-&gt;αX·β,a]加入到集合J中;</span><br><span class="line">	return CLOSURE(J);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">void items(G&apos;) &#123;</span><br><span class="line">	将C初始化为&#123;CLOSURE&#125;(&#123;[S&apos;-&gt;·S,$]&#125;);</span><br><span class="line">	repeat</span><br><span class="line">		for(C中的每个项集I)</span><br><span class="line">			for(每个文法符号X)</span><br><span class="line">				if(GOTO(I,X)非空且不在C中)</span><br><span class="line">					将GOTO(I,X)加入C中;</span><br><span class="line">	until 不再有新的项集加入到C中;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>　　上述的代码只是从理论角度提供的可行的算法，而具体怎么写还要根据我们的实现来进行修改。上边的<code>item</code>便是计算LR(1)项集族的主要函数，它会分别调用<code>CLOSURE</code>函数计算一个内核项所产生的项集，之后调用<code>GOTO</code>函数计算一个项集在遇到一个终结符或者非终结符时所产生的内核项。(内核项的概念十分重要，内核项是指包括初始项<code>S&#39;-&gt;·S</code>以及点不在最左端的所有项，一个项集其实只用内核项表示就足够了，两个项集如果内核项一样，那这两个项集一定是相同的。)
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2016/09/11/syntacticParser2/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/09/08/syntacticParser1/" itemprop="url">
                   编译原理——基于LR(1)的语法检查器(一)
                 </a>
@@ -1215,7 +1319,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">9</span>
+              <span class="site-state-item-count">10</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>

@@ -262,6 +262,124 @@
             
               
                 
+                <a class="post-title-link" href="/2017/01/20/regex-engine1/" itemprop="url">
+                  基本正则引擎的实现
+                </a>
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-01-20T14:07:45+08:00" content="2017-01-20">
+              2017-01-20
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/01/20/regex-engine1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/20/regex-engine1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>　　这个篇文章是对我的一个基本功能的正则引擎的实现过程的大致介绍与讨论，实际上在之前的文章中我已经对正则引擎的实现有所涉及，当时是翻译了有关Thompson NFA的文章，文章及其附带的源代码中已经对如何实现一个简单的正则引擎有了详细的说明，但是该文章对正则引擎的介绍并不深入，同时实现方式也过于简单化，虽然最终的结果是高效可靠的，但是这个实现不便于扩展，同时支持的功能也比较有限，因此在这一次的实现中，我采用了更加主流的方法，这样支持了更多的功能，同时也易于扩展。该项目使用的语言为C++，完整项目请移步<a href="https://github.com/YLonely/regexEngine2"><em>regexEngine2</em></a>。</p>
+<h2 id="引擎功能介绍"><a href="#引擎功能介绍" class="headerlink" title="引擎功能介绍"></a>引擎功能介绍</h2><p>下面简单地介绍一下这一次的正则的一些功能(并联串联功能不再赘述)：</p>
+<p>1.’*‘：零个或多个</p>
+<p>2.’+’：一个或多个</p>
+<p>3.’?’：零个或一个</p>
+<p>4.’.’：匹配任意一个字符</p>
+<p>5.{a}：重复a次；{a,b}：重复次数大于等于a小于等于b；{a,}：重复次数大于等于a</p>
+<p>6.[m-n]：匹配范围内的字符(例如：[a-g]等价于a|b|c|d|e|f|g等价于[abcdefg])</p>
+<p>7.[^m-n]：匹配不是范围内的字符</p>
+<p>同时还加入了一些特殊的转义字符：</p>
+<p>1.\d：等价于[0-9]</p>
+<p>2.\D：等价于[^0-9]</p>
+<p>3.\s：等价于[\t\n\r\f]</p>
+<p>4.\S：等价于[^\t\n\r\f]</p>
+<p>5.\w：等价于[a-zA-Z0-9_]</p>
+<p>6.\W：等价于[^a-zA-Z0-9_]
+          <div class="post-more-link text-center">
+            <a class="btn" href="/2017/01/20/regex-engine1/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+        
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <div>
+      
+    </div>
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+
+
+    
+      
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                
                 <a class="post-title-link" href="/2016/09/11/syntacticParser2/" itemprop="url">
                   编译原理——基于LR(1)的语法检查器(二)
                 </a>
@@ -1177,110 +1295,13 @@
 
 
     
-      
-
-  
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-            
-            
-              
-                
-                <a class="post-title-link" href="/2016/05/10/我的第一篇博文/" itemprop="url">
-                  我的第一篇博文
-                </a>
-              
-            
-          </h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            <span class="post-meta-item-icon">
-              <i class="fa fa-calendar-o"></i>
-            </span>
-            <span class="post-meta-item-text">发表于</span>
-            <time itemprop="dateCreated" datetime="2016-05-10T20:48:30+08:00" content="2016-05-10">
-              2016-05-10
-            </time>
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                &nbsp; | &nbsp;
-                <a href="/2016/05/10/我的第一篇博文/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count ds-thread-count" data-thread-key="2016/05/10/我的第一篇博文/" itemprop="commentsCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-
-          
-          
-
-          
-        </div>
-      </header>
-    
-
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <p>　　欢迎来到我的博客，我将在此记录下我在计算机领域的探索与进步，我会及时地将我的项目以及相应的介绍放到博客上，欢迎你们关注。同时你们也可以点击<a href="https://github.com/YLonely" target="_blank" rel="external">YLonely-GitHub</a>进入我的<code>GitHub</code>页面查看我的项目的最新进展。总之，欢迎任何人在此留下足迹。</p>
-
-          
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-
-
-    
   </section>
 
   
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right"></i></a>
+  </nav>
+
 
 
           </div>
@@ -1319,7 +1340,7 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">10</span>
+              <span class="site-state-item-count">11</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
@@ -1366,7 +1387,7 @@
         <div class="copyright" >
   
   &copy; 
-  <span itemprop="copyrightYear">2016</span>
+  <span itemprop="copyrightYear">2017</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

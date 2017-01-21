@@ -1,0 +1,786 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/vendors/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+      
+    
+
+    
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic|Brush Script MT:300,300italic,400,400italic,700,700italic|courier new:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/vendors/font-awesome/css/font-awesome.min.css?v=4.4.0" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.0.1" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="正则引擎,正则表达式," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.0.1" />
+
+
+
+
+
+
+<meta name="description" content="介绍　　这个篇文章是对我的一个基本功能的正则引擎的实现过程的大致介绍与讨论，实际上在之前的文章中我已经对正则引擎的实现有所涉及，当时是翻译了有关Thompson NFA的文章，文章及其附带的源代码中已经对如何实现一个简单的正则引擎有了详细的说明，但是该文章对正则引擎的介绍并不深入，同时实现方式也过于简单化，虽然最终的结果是高效可靠的，但是这个实现不便于扩展，同时支持的功能也比较有限，因此在这一次的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="基本正则引擎的实现">
+<meta property="og:url" content="http://ylonelyhub.com/2017/01/20/regex-engine1/index.html">
+<meta property="og:site_name" content="New thinking">
+<meta property="og:description" content="介绍　　这个篇文章是对我的一个基本功能的正则引擎的实现过程的大致介绍与讨论，实际上在之前的文章中我已经对正则引擎的实现有所涉及，当时是翻译了有关Thompson NFA的文章，文章及其附带的源代码中已经对如何实现一个简单的正则引擎有了详细的说明，但是该文章对正则引擎的介绍并不深入，同时实现方式也过于简单化，虽然最终的结果是高效可靠的，但是这个实现不便于扩展，同时支持的功能也比较有限，因此在这一次的">
+<meta property="og:image" content="http://ylonelyhub.com/img/match_example1.jpg">
+<meta property="og:image" content="http://ylonelyhub.com/img/match_example2.jpg">
+<meta property="og:image" content="http://ylonelyhub.com/img/error_example1.jpg">
+<meta property="og:image" content="http://ylonelyhub.com/img/analyzer_example.jpg">
+<meta property="og:image" content="http://ylonelyhub.com/img/result.jpg">
+<meta property="og:image" content="http://ylonelyhub.com/img/result2.jpg">
+<meta property="og:updated_time" content="2017-01-21T13:23:37.492Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="基本正则引擎的实现">
+<meta name="twitter:description" content="介绍　　这个篇文章是对我的一个基本功能的正则引擎的实现过程的大致介绍与讨论，实际上在之前的文章中我已经对正则引擎的实现有所涉及，当时是翻译了有关Thompson NFA的文章，文章及其附带的源代码中已经对如何实现一个简单的正则引擎有了详细的说明，但是该文章对正则引擎的介绍并不深入，同时实现方式也过于简单化，虽然最终的结果是高效可靠的，但是这个实现不便于扩展，同时支持的功能也比较有限，因此在这一次的">
+<meta name="twitter:image" content="http://ylonelyhub.com/img/match_example1.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configuration">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    scheme: 'Pisces',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: 0,
+      author: '博主'
+    }
+  };
+
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+
+  <link rel="canonical" href="http://ylonelyhub.com/2017/01/20/regex-engine1/"/>
+
+  <title> 基本正则引擎的实现 | New thinking </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-meta ">
+  
+
+  <div class="custom-logo-site-title">
+    <a href="/"  class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <span class="site-title">New thinking</span>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+  <p class="site-subtitle">Every little step</p>
+</div>
+
+<div class="site-nav-toggle">
+  <button>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+    <span class="btn-bar"></span>
+  </button>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                基本正则引擎的实现
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            <span class="post-meta-item-icon">
+              <i class="fa fa-calendar-o"></i>
+            </span>
+            <span class="post-meta-item-text">发表于</span>
+            <time itemprop="dateCreated" datetime="2017-01-20T14:07:45+08:00" content="2017-01-20">
+              2017-01-20
+            </time>
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                &nbsp; | &nbsp;
+                <a href="/2017/01/20/regex-engine1/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count ds-thread-count" data-thread-key="2017/01/20/regex-engine1/" itemprop="commentsCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+
+          
+          
+
+          
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p>　　这个篇文章是对我的一个基本功能的正则引擎的实现过程的大致介绍与讨论，实际上在之前的文章中我已经对正则引擎的实现有所涉及，当时是翻译了有关Thompson NFA的文章，文章及其附带的源代码中已经对如何实现一个简单的正则引擎有了详细的说明，但是该文章对正则引擎的介绍并不深入，同时实现方式也过于简单化，虽然最终的结果是高效可靠的，但是这个实现不便于扩展，同时支持的功能也比较有限，因此在这一次的实现中，我采用了更加主流的方法，这样支持了更多的功能，同时也易于扩展。该项目使用的语言为C++，完整项目请移步<a href="https://github.com/YLonely/regexEngine2" target="_blank" rel="external"><em>regexEngine2</em></a>。</p>
+<h2 id="引擎功能介绍"><a href="#引擎功能介绍" class="headerlink" title="引擎功能介绍"></a>引擎功能介绍</h2><p>下面简单地介绍一下这一次的正则的一些功能(并联串联功能不再赘述)：</p>
+<p>1.’*‘：零个或多个</p>
+<p>2.’+’：一个或多个</p>
+<p>3.’?’：零个或一个</p>
+<p>4.’.’：匹配任意一个字符</p>
+<p>5.{a}：重复a次；{a,b}：重复次数大于等于a小于等于b；{a,}：重复次数大于等于a</p>
+<p>6.[m-n]：匹配范围内的字符(例如：[a-g]等价于a|b|c|d|e|f|g等价于[abcdefg])</p>
+<p>7.[^m-n]：匹配不是范围内的字符</p>
+<p>同时还加入了一些特殊的转义字符：</p>
+<p>1.\d：等价于[0-9]</p>
+<p>2.\D：等价于[^0-9]</p>
+<p>3.\s：等价于[\t\n\r\f]</p>
+<p>4.\S：等价于[^\t\n\r\f]</p>
+<p>5.\w：等价于[a-zA-Z0-9_]</p>
+<p>6.\W：等价于[^a-zA-Z0-9_]<a id="more"></a></p>
+<p>　　由此可见，这一次的正则引擎的功能相较于之前的实现有了更多的加强，这样一来使得正则匹配更加方便易用，但就如同我刚开始说的，这也仅仅是一个基本的功能，因为真正工业级别的正则引擎还有许多高级但是实用的功能，例如：贪婪匹配与非贪婪匹配(其实这个实现起来比较简单)，正向预查，反向预查等等，这些功能使得正则表达式更加强大，但是实现起来也更加的复杂，由于我的本意并不是做一个完备的正则引擎，因此这些高大上的功能就跳过。下图大致展示了程序匹配时的情况：</p>
+<p><img src="/img/match_example1.jpg" alt="match_example1"></p>
+<p>图中的match方法的第二个参数为匹配的模式，第一种是ALL_MATCH，第二种是SUB_MATCH，前者将整个给定的字符串作为输入进行匹配，后者会将给定字符串中与表达式匹配的地方筛选出，并存储到result属性中。</p>
+<p>同时这一次的实现我也加入了对宽字符的支持：</p>
+<p><img src="/img/match_example2.jpg" alt="match_example2"></p>
+<p>最后当书写的正则表达式出现错误时，错误的提示也会更加详细：</p>
+<p><img src="/img/error_example1.jpg" alt="error_example1"></p>
+<p>既然正则引擎已经实现了，那顺便实现一个词法分析器的模块也是比较轻松的事情，在头文件analyzer.h文件中定义了两个类，一个是MatchUnit，一个是LexicalAnalyzer，在使用词法分析器的时候，需要实例化MatchUnit类，之后使用MatchUnit的实例来初始化LexicalAnalyzer，在设定好所需要分析的文件之后，便可以通过调用get_next_token方法获取词法单元。</p>
+<p><img src="/img/analyzer_example.jpg" alt="analyzer"></p>
+<h1 id="实现"><a href="#实现" class="headerlink" title="实现"></a>实现</h1><p>　　这一次引擎的实现我采用了业界主流的方法，即首先对正则表达式进行解析，形成抽象语法树，通过抽象语法树得到表达式的字符集以及NFA，通过子集构造法将NFA转换为DFA，最后通过将DFA中的相同状态合并，得到最小化的DFA，这样得到的状态转换表便最终用来进行字符串的匹配。实际上之前的Thompson NFA的实现方法是将正则表达式转换为NFA，之后使用该NFA进行匹配，这种方法实现简单，但是当正则表达式很复杂时，生成的NFA的状态是很多的，这样匹配速度会下降，特别是在重复进行匹配时，时间的消耗很大。而最小化后的DFA状态转换相较于NFA会少了很多的不必要的状态，这样匹配速度会得到大幅提升。接下来我会分别对上述的几个处理过程进行介绍。</p>
+<h2 id="解析正则表达式"><a href="#解析正则表达式" class="headerlink" title="解析正则表达式"></a>解析正则表达式</h2><p>　　实现的第一步是解析正则表达式，而解析的时候文法是必不可少的，以下是我从网上找到的正则表达式的文法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line">RE::= union | simple-RE                 </span><br><span class="line">union::= RE &quot;|&quot; simple-RE               </span><br><span class="line">simple-RE::= concatenation | basic-RE</span><br><span class="line">concatenation::= simple-RE basic-RE</span><br><span class="line">basic-RE::= num-range | star | plus | ques | elementary-RE</span><br><span class="line">star::=	elementary-RE &quot;*&quot;</span><br><span class="line">plus::=	elementary-RE &quot;+&quot;</span><br><span class="line">ques::=	elementary-RE &quot;?&quot;</span><br><span class="line">num-range::= elementary-RE &quot;&#123;&quot; range &quot;&#125;&quot;</span><br><span class="line">range::= num | num &quot;,&quot; | num &quot;,&quot; num</span><br><span class="line">elementary-RE::= group | any | eos | char | set</span><br><span class="line">group::= &quot;(&quot; RE &quot;)&quot;</span><br><span class="line">any::= &quot;.&quot;</span><br><span class="line">eos::= &quot;$&quot;  //end of string</span><br><span class="line">char::= any-non-metacharacter | &quot;\&quot; metacharacter</span><br><span class="line">set::= positive-set | negative-set</span><br><span class="line">positive-set::= &quot;[&quot; set-items &quot;]&quot;</span><br><span class="line">negative-set::= &quot;[^&quot; set-items &quot;]&quot;</span><br><span class="line">set-items::= set-item | set-item set-items</span><br><span class="line">set-item::= char-range | char</span><br><span class="line">char-range::= char &quot;-&quot; char</span><br><span class="line"></span><br><span class="line">metacharacter: &quot;|&quot; , &quot;.&quot; , &quot;*&quot; , &quot;?&quot; , &quot;+&quot; , &quot;[&quot; , &quot;]&quot; , &quot;&#123;&quot; , &quot;&#125;&quot;</span><br><span class="line">\t &#123;=tab character&#125;</span><br><span class="line">\n &#123;=newline character&#125;</span><br><span class="line">\r &#123;=carriage return character&#125;</span><br><span class="line">\f &#123;=form feed character&#125;</span><br><span class="line">\d &#123;=a digit, [0-9]&#125;</span><br><span class="line">\D &#123;=not a digit, [^0-9]&#125;</span><br><span class="line">\s &#123;=whitespace, [ \t\n\r\f]&#125;</span><br><span class="line">\S &#123;=not a whitespace, [^ \t\n\r\f]&#125;</span><br><span class="line">\w &#123;=&apos;word&apos; character, [a-zA-Z0-9_]&#125;</span><br><span class="line">\W &#123;=not a &apos;word&apos; character, [^a-zA-Z0-9_]&#125;</span><br></pre></td></tr></table></figure>
+<p>稍微观察不难发现，该文法是左递归的，同时也没有对{a,b}这个功能的描述，我在解析的时候是采用的递归下降法解析，因此对该文法稍加修改得到：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">RE::= simple-RE union</span><br><span class="line">union::= &quot;|&quot; simple-RE union | ε</span><br><span class="line">simple-RE::= basic-RE concatenation</span><br><span class="line">concatenation::= basic-RE concatenation | ε</span><br><span class="line">basic-RE::= num-range | star | plus | ques | elementary-RE</span><br><span class="line">star::=	elementary-RE &quot;*&quot;</span><br><span class="line">plus::=	elementary-RE &quot;+&quot;</span><br><span class="line">ques::=	elementary-RE &quot;?&quot;</span><br><span class="line">num-range::= elementary-RE &quot;&#123;&quot; range &quot;&#125;&quot;</span><br><span class="line">basic-RE::= elementary-RE special-symbol</span><br><span class="line">special-symbol::= &quot;&#123;&quot; range &quot;&#125;&quot; | &quot;*&quot; | &quot;+&quot; | &quot;?&quot; | ε</span><br><span class="line">range::= num | num &quot;,&quot; | num &quot;,&quot; num</span><br><span class="line">elementary-RE::= group | any | eos | char | set</span><br><span class="line">group::= &quot;(&quot; RE &quot;)&quot;</span><br><span class="line">any::= &quot;.&quot;</span><br><span class="line">eos::= &quot;$&quot;  //end of string</span><br><span class="line">char::= any-non-metacharacter | &quot;\&quot; metacharacter</span><br><span class="line">set::= positive-set | negative-set</span><br><span class="line">positive-set::= &quot;[&quot; set-items &quot;]&quot;</span><br><span class="line">negative-set::= &quot;[^&quot; set-items &quot;]&quot;</span><br><span class="line">set-items::= set-item | set-item set-items</span><br><span class="line">set-item::= char-range | char</span><br><span class="line">char-range::= char &quot;-&quot; char</span><br></pre></td></tr></table></figure>
+<p>递归下降解析对文法中的每一个非终结符给出一个处理的函数，层层递归调用，直到遇到文法中的终结符返回，或者是报告一个解析错误，按照上边的文法写出一个针对正则文法的解析过程并不困难。在这里我主要谈一下解析之后生成的抽象语法树的大致结构，在我的工程的regex_ast.h文件中，有对抽象语法树的完整定义，去除一些具体的实现细节，简略的继承关系如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> </span>= <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">virtual</span> ~IASTNode() = <span class="keyword">default</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="built_in">std</span>::<span class="built_in">shared_ptr</span>&lt;IASTNode&gt; node_ptr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> CharNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="keyword">wchar_t</span> c = <span class="number">-1</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> RangeNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr node;</span><br><span class="line">	<span class="keyword">int</span> min;</span><br><span class="line">	<span class="keyword">int</span> max;	<span class="comment">//max = -1 means infinity</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> SetNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="built_in">std</span>::<span class="built_in">vector</span>&lt;<span class="built_in">std</span>::pair&lt;<span class="keyword">wchar_t</span>, <span class="keyword">wchar_t</span>&gt;&gt; <span class="built_in">set</span>;</span><br><span class="line">	<span class="keyword">bool</span> ispositive = <span class="literal">true</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> ConcatenationNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr left;</span><br><span class="line">	node_ptr right;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> AlternationNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr left;</span><br><span class="line">	node_ptr right;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> StarNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr node;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> PlusNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr node;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> QuesNode :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr node;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> EndOfString :<span class="keyword">public</span> IASTNode</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">accept_visitor</span><span class="params">(IVisitor *visitor)</span> override</span>;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	node_ptr node;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>可以看到CharNode，RangeNode等类均继承自IASTNode，并重写了父类的accept_visitor虚方法，在这里有必要对该虚方法的产生作说明，在这里我采用了设计模式中的“访问者模式”，当不同的“访问者类”对语法树进行访问时，会调用访问者各自不同的方法，对语法树进行解析，关于访问者模式在网上也有很多的介绍，十分详细，在此不赘述。访问者模式使抽象语法树本身与对抽象语法树的操作相互分离开，使语法树本身更加简洁，同时在扩展对语法树的操作的时候也会更加简便。</p>
+<h2 id="字符集"><a href="#字符集" class="headerlink" title="字符集"></a>字符集</h2><p>　　字符集顾名思义就是字符的集合，或者说是字符的范围。考虑一下“1|2|3|4|5”这个正则表达式，当我们在构造该正则表达式的NFA或者DFA时，会包含两个状态，一个是初始状态，而另一个是结束状态，而在开始和结束状态之间，会有表示转换的边，当我们没有使用字符集时，我们会在这两个状态之间构造5条边，每条边只匹配一个字符，而当我们引入字符集的概念时，会发现1，2，3，4，5这五个数字其实是相互等价的，我们可以使用1-5这样的范围来表示对这五个字符的匹配，当然，如果使用ASCII码的话，就可以使用61-65来表示。这样初始与结束状态之间就只有一条边了，同样的，当我们在将NFA或者DFA转换为转换表时，表的大小可以进一步缩小，如上边的正则表达式在没有字符集时的转换表应该为：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>1</th>
+<th>2</th>
+<th>3</th>
+<th>4</th>
+<th>5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>状态0</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr>
+<td>状态1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+<td>-1</td>
+</tr>
+</tbody>
+</table>
+<p>在加入字符集后：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>1-5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>状态0</td>
+<td>1</td>
+</tr>
+<tr>
+<td>状态1</td>
+<td>-1</td>
+</tr>
+</tbody>
+</table>
+<p>字符集的引入并不是必要的，但是使用字符集可以使构造出的状态转换更加简单，也可以提高运行时的速度。需要注意的是，字符集的构造其实并不是简单地将相邻的几个字符合并为一个范围项，有时候字符集的构造更多的是一个拆分的过程，考虑这样一个正则表达式：“[0-9]|34”，此时的3，4和其他数字并不是等价的，因此此时的字符集也就并不是简单的0-9，而是需要进行拆分，拆分成为0-2，3，4，5-9，同时从状态转换的角度也可以看出，字符3，4和其它字符的状态转换也是不同的。在我的程序中，字符集的构造是在构造抽象语法树之后进行的，通过遍历一遍语法树，可以构造出该正则表达式的字符集。字符集的详细定义及实现在regex.h文件中。</p>
+<h2 id="构造NFA"><a href="#构造NFA" class="headerlink" title="构造NFA"></a>构造NFA</h2><p>　　构造NFA的相关方法在网络上有许多相关的资料，在此不赘述，在这里需要注意的是在构造NFA时，我依然使用了访问者模式，构造NFA的访问者类的详细定义见visitor.h文件。在构造NFA时，主要的步骤就是在语法树的每一个节点上调用访问者的方法，例如在遇到CharNode时，调用的方法如下：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Automata NFAConstructVisitor::apply(CharNode *n)</span><br><span class="line">&#123;</span><br><span class="line">	status_ptr start = make_shared&lt;NFAStatus&gt;();</span><br><span class="line">	status_ptr end = make_shared&lt;NFAStatus&gt;();</span><br><span class="line">	edge_ptr char_edge = make_shared&lt;Edge&gt;(set.get_group_index(&#123; n-&gt;get_char(),n-&gt;get_char() &#125;));</span><br><span class="line">	connect(start, end, char_edge);</span><br><span class="line"></span><br><span class="line">	record(start);</span><br><span class="line">	record(end);</span><br><span class="line">	return Automata(start, end);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>首先构造两个NFA状态，之后构造一个匹配该字符的边，之后使用该边将两个状态相连即可，其他的结点与此类似，需要注意的是这里的访问者类的方法有一个返回值，而一般的对访问者模式的介绍中并没有介绍带返回值的情况，而带返回值的方法主要是为了解决在解析正则表达式中{a,b}这个功能(在我的实现中，使用这个功能的结点被命名为RangeNode)时遇到的问题，这个结点在构造NFA时，需要将这个结点的子节点重复构造多次，每一次构造出的NFA片段都是相同的，而如果apply的方法不带返回值，则难以对这个结点进行解析，而如果带有返回值的话，就可以采用递归调用的方式，重复地构造NFA片段，因此针对RangeNode的方法可以这样写：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">Automata NFAConstructVisitor::apply(RangeNode *n)</span><br><span class="line">&#123;</span><br><span class="line">	Automata head;</span><br><span class="line">	<span class="keyword">int</span> min = n-&gt;get_range().first, max = n-&gt;get_range().second;</span><br><span class="line">	<span class="keyword">if</span> (min == <span class="number">0</span> &amp;&amp; max == <span class="number">-1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">auto</span> start = make_shared&lt;NFAStatus&gt;();</span><br><span class="line">		record(start);</span><br><span class="line">		<span class="keyword">auto</span> frag = invoke(n-&gt;get_node());</span><br><span class="line">		<span class="keyword">auto</span> end = make_shared&lt;NFAStatus&gt;();</span><br><span class="line">		connect(frag.end, frag.start);</span><br><span class="line">		connect(frag.end, end);</span><br><span class="line"></span><br><span class="line">		connect(start, frag.start);</span><br><span class="line">		connect(start, end);</span><br><span class="line"></span><br><span class="line">		record(end);</span><br><span class="line">		return Automata(start, end);</span><br><span class="line">	&#125;</span><br><span class="line">   ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其中的<em>frag = invoke(n-&gt;get_node())</em>便是对其子节点解析的过程，解析得到的返回值，便是子节点所构成的NFA片段。</p>
+<h2 id="构造DFA"><a href="#构造DFA" class="headerlink" title="构造DFA"></a>构造DFA</h2><p>　　构造DFA时我使用的是子集构造法，子集构造法有三个重要的操作：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th style="text-align:left">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ε-closure(s)</td>
+<td style="text-align:left">能够从NFA的状态s开始只通过ε转换到达的状态集合</td>
+</tr>
+<tr>
+<td>ε-closure(T)</td>
+<td style="text-align:left">能够从集合T中某个NFA状态s开始只通过ε转换到达的NFA状态集合</td>
+</tr>
+<tr>
+<td>move(T,a)</td>
+<td style="text-align:left">能够从T中某个状态s出发通过标号为a的转换到达的NFA状态的集合</td>
+</tr>
+</tbody>
+</table>
+<p>ε转换指的便是我们在构造NFA时大量使用的空边，空边是不匹配任何字符的，一个状态可以在没有读入任何字符的状态下通过空边进入另一个状态，而这两个通过空边相连的状态实际上是可以合并的，通过这样的合并可以进一步减少状态机中的状态数目，同时消除空边。而子集构造法便是通过将这些可以合并的状态合并成为一个状态构造出DFA的。子集构造法的算法如下，其中的s<sub>0</sub>表示开始状态：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//一开始，ε-closure(s0)是Dstates中的唯一状态，且它未加标记；</span></span><br><span class="line"><span class="keyword">while</span>(在Dstates中有一个未标记状态T)&#123;</span><br><span class="line">  给T加上标记;</span><br><span class="line">  <span class="keyword">for</span>(每个输入符号a)&#123;</span><br><span class="line">    U = ε-closure(move(T,a));</span><br><span class="line">    <span class="keyword">if</span>(U不在Dstates中)</span><br><span class="line">      将U加入到Dstates中，且不加标记;</span><br><span class="line">    Dtran[T,a] = U;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　实际上在我的实现中，从NFA转换得到的DFA就已经是状态转换表的形式了，每一个DFA状态的实例中都会包含一个status_tran的私有变量，该变量记录了在不同的输入字符上的状态转换。当把所有的这些DFA状态集合到一起，就构成了一个完整的DFA状态转换表。</p>
+<h2 id="最小化DFA"><a href="#最小化DFA" class="headerlink" title="最小化DFA"></a>最小化DFA</h2><p>　　实际上构造出的DFA也可以用来进行字符串的匹配了，相较于NFA，DFA的状态数目已经大大减少了，但是即便如此，DFA依然有进一步简化的余地，就以龙书上的例子进行说明，正则表达式“(a|b)*abb”的DFA转换表如下：</p>
+<table>
+<thead>
+<tr>
+<th>DFA状态</th>
+<th>a</th>
+<th>b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A</td>
+<td>B</td>
+<td>C</td>
+</tr>
+<tr>
+<td>B</td>
+<td>B</td>
+<td>D</td>
+</tr>
+<tr>
+<td>C</td>
+<td>B</td>
+<td>C</td>
+</tr>
+<tr>
+<td>D</td>
+<td>B</td>
+<td>E</td>
+</tr>
+<tr>
+<td>E</td>
+<td>B</td>
+<td>C</td>
+</tr>
+</tbody>
+</table>
+<p>观察这个转换表我们可以发现，状态A，C，E的状态转换是相同的，我们可以考虑是否可以像构造DFA时一样将这些状态合并成为一个状态，从而进一步减少状态的数量，实际上这是可行的，但是并不是A，C，E都合并到一起，而是将A，C合并到一起，因为E状态是结束状态，因此E状态与A，C状态本质上是不同的。实际上，我们还有更加严谨的方法来检验两个状态是否是可以合并的，在这里我们就要引入<strong>区分</strong>的概念：如果分别从状态s和t出发，沿着标号为x的路径(这里的路径可能包含多个字符)到达的两个状态中只有一个是接受状态(即结束状态)，我们说串x区分状态s和t，这样状态s和t就是<strong>可区分</strong>的，上边的状态A和C就是这样的两个状态。因此最小化DFA的过程是一个不断分组的过程，我们把一个集合中可区分的状态全部摘除出去，最后剩下的就是不可区分的状态，同时也就是可以合并的状态。需要注意的是，结束状态和非结束状态在一开始就是分离的，不可合并的。但需要注意的是在实际的使用中，我们并不直接使用<strong>区分</strong>的定义去合并DFA的状态，因为定义中的路径是不定长度的，同时到达状态是否是结束状态的限制也比较大，因此状态最小化算法依据的实际上是<strong>区分</strong>的等价变形，最开始我们将DFA的状态划分为结束状态组和非结束状态组，我们选定某一个输入符号a，检查每一个组中的某两个状态在a上的转换，如果它们的转换都到达同一个组的状态，那这就可以说明符号a不能区分这两个状态，我们重复这个过程，检查这两个状态在其他符号上的转换，看是否有其他符号能区分这两个状态，同时也要对所有分组中的状态两两检查，直到分组不再变化，这样就完成了状态的最小化。</p>
+<p>　　让我们用这一算法来最小化一个稍微复杂一点的正则表达式“(123?){2,5}|(abc*){4,6}”，运行后得到的NFA，DFA和最小化DFA的结果如下：</p>
+<p><img src="/img/result.jpg" alt="result"></p>
+<p>可以看到，解析之后得到的NFA的状态数为82，DFA的状态数为34，最小化DFA的状态数为28，当正则表达式更加复杂时，状态的缩减还会更加明显。</p>
+<p>　　有趣的是，子集构造法并不总是会将NFA的状态数减少，例如正则表达式“(a+b?){5,10}”，它的构造结果如下：</p>
+<p><img src="/img/result2.jpg" alt="result2"></p>
+<p>可以看到NFA的状态数为41，而DFA却达到了111，最小化后依然为41，这应该算是构造时候的一种比较特殊的情况。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>　　总结没什么可说的，这个项目总的来说花的时间比较长，最终的实现也有一些小的瑕疵，例如最小化DFA的算法写得效率并不高，状态数量太多的话运行速度会很慢。不过也还算是有收获，然后是时候把编译原理向前推进一下了。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/正则引擎/" rel="tag">#正则引擎</a>
+          
+            <a href="/tags/正则表达式/" rel="tag">#正则表达式</a>
+          
+        </div>
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2016/09/11/syntacticParser2/" rel="next" title="编译原理——基于LR(1)的语法检查器(二)">
+                <i class="fa fa-chevron-left"></i> 编译原理——基于LR(1)的语法检查器(二)
+              </a>
+            
+          </div>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+      <div class="ds-thread" data-thread-key="2017/01/20/regex-engine1/"
+           data-title="基本正则引擎的实现" data-url="http://ylonelyhub.com/2017/01/20/regex-engine1/">
+      </div>
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel ">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/images/avatar.png"
+               alt="YLonely" />
+          <p class="site-author-name" itemprop="name">YLonely</p>
+          <p class="site-description motion-element" itemprop="description"></p>
+        </div>
+        <nav class="site-state motion-element">
+          <div class="site-state-item site-state-posts">
+            <a href="/archives">
+              <span class="site-state-item-count">11</span>
+              <span class="site-state-item-name">日志</span>
+            </a>
+          </div>
+
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">7</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+        </div>
+
+        
+        
+
+        
+        
+
+      </section>
+
+      
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+            
+              
+            
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#介绍"><span class="nav-number">1.</span> <span class="nav-text">介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#引擎功能介绍"><span class="nav-number">1.1.</span> <span class="nav-text">引擎功能介绍</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实现"><span class="nav-number">2.</span> <span class="nav-text">实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#解析正则表达式"><span class="nav-number">2.1.</span> <span class="nav-text">解析正则表达式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符集"><span class="nav-number">2.2.</span> <span class="nav-text">字符集</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造NFA"><span class="nav-number">2.3.</span> <span class="nav-text">构造NFA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#构造DFA"><span class="nav-number">2.4.</span> <span class="nav-text">构造DFA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#最小化DFA"><span class="nav-number">2.5.</span> <span class="nav-text">最小化DFA</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+          </div>
+        </section>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">YLonely</span>
+</div>
+
+<div class="powered-by">
+  由 <a class="theme-link" href="http://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Pisces
+  </a>
+</div>
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  <script type="text/javascript" src="/vendors/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/vendors/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/vendors/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.0.1"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.0.1"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.0.1"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.0.1"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.0.1"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.0.1"></script>
+
+
+
+  
+
+  
+    
+  
+
+  <script type="text/javascript">
+    var duoshuoQuery = {short_name:"ylonely"};
+    (function() {
+      var ds = document.createElement('script');
+      ds.type = 'text/javascript';ds.async = true;
+      ds.id = 'duoshuo-script';
+      ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+      ds.charset = 'UTF-8';
+      (document.getElementsByTagName('head')[0]
+      || document.getElementsByTagName('body')[0]).appendChild(ds);
+    })();
+  </script>
+
+  
+    
+    <script src="/vendors/ua-parser-js/dist/ua-parser.min.js?v=0.7.9"></script>
+    <script src="/js/src/hook-duoshuo.js"></script>
+  
+
+
+
+
+
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
